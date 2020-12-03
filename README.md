@@ -1,5 +1,5 @@
 
-![Github actions](https://github.com/parzival3/chisel-crv/workflows/Scala%20CI/badge.svg) [![codecov](https://codecov.io/gh/parzival3/chisel-crv/branch/develop/graph/badge.svg?token=1UWX7OCVTD)](https://codecov.io/gh/parzival3/chisel-crv)
+![Github actions](https://github.com/chisel-uvm/chisel-crv/workflows/Scala%20CI/badge.svg) [![codecov](https://codecov.io/gh/parzival3/chisel-crv/branch/develop/graph/badge.svg?token=1UWX7OCVTD)](https://codecov.io/gh/parzival3/chisel-crv)
 
 # Chisel-CRV
 Chisel CRV is a project that aims to mimic the functionality of SystemVerilog constraint programming and integrates them into [chisel-tester2](https://github.com/ucb-bar/chisel-testers2).
@@ -122,13 +122,13 @@ sbt publishLocal
 And then add to the `build.sbt`
 ```sbt
 libraryDependencies ++= Seq(
-  "parzival3" %% "chisel-crv" % "0.2.2"
+  "chisel-uvm" %% "chisel-crv" % "0.2.2"
 )
 ```
 ### Grab it from github
 Alternatively, if you don't want to pulish the repository locally, you can grab it directly from github by adding
 ```sbt
-lazy val chisel_crv = RootProject(uri("git://github.com/parzival3/chisel-crv.git"))
+lazy val chisel_crv = RootProject(uri("git://github.com/chisel-uvm/chisel-crv.git"))
 lazy val root = Project("root", file(".")).dependsOn(chisel_crv)
 ```
 to you `build.sbt` file.
