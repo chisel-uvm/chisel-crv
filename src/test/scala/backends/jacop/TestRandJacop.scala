@@ -10,9 +10,9 @@ class TestRandJacop extends FlatSpec with VerificationContext {
       val max = 100
       var size = new Rand("size", min, max)
       var len = new Rand("len", min, max)
-      var z:       crv.Constraint = len #>= size
+      len #>= size
       val x:       crv.Constraint = len #<= size
-      var y:       crv.Constraint = len #> 4
+      val y:       crv.Constraint = len #> 4
       val payload: Array[Rand] = Array.tabulate(11)(i => new Rand("byte[" + i + "]", 1, 100))
       payload(0) #= (len + size)
     }
@@ -71,8 +71,8 @@ class TestRandJacop extends FlatSpec with VerificationContext {
       val size = new Rand("size", min, max)
       val len = new Rand("len", min, max)
       val payload: Array[Rand] = Array.tabulate(11)(i => new Rand("byte[" + i + "]", 1, 100))
-      payload(0) #= (len.div(size))
-      payload(1) #= (len.div(4))
+      payload(0) #= len.div(size)
+      payload(1) #= len.div(4)
     }
     val myPacket = new Packet
     assert(myPacket.randomize)
@@ -103,8 +103,8 @@ class TestRandJacop extends FlatSpec with VerificationContext {
       val size = new Rand("size", min, max)
       val len = new Rand("len", min, max)
       val payload: Array[Rand] = Array.tabulate(11)(i => new Rand("byte[" + i + "]", 1, 100))
-      payload(0) #= (len.mod(size))
-      payload(1) #= (len.mod(4))
+      payload(0) #= len.mod(size)
+      payload(1) #= len.mod(4)
     }
     val myPacket = new Packet
     assert(myPacket.randomize)
@@ -224,10 +224,9 @@ class TestRandJacop extends FlatSpec with VerificationContext {
       val len = new Rand("len", min, max)
       val randc = new Randc(min, max)
       val payload: Array[Rand] = Array.tabulate(11)(i => new Rand("byte[" + i + "]", min, max))
-      val cgroup: ConstraintGroup = new ConstraintGroup {
-        payload(0) #> len
-        payload(1) #> 98
-      }
+
+      payload(0) #> len
+      payload(1) #> 98
 
       val negc: crv.Constraint = payload(1) #< 98
       negc.disable()
@@ -266,15 +265,15 @@ class TestRandJacop extends FlatSpec with VerificationContext {
       val len:               Rand = new Rand(1, 3)
       val c:                 Rand = new Rand(1, 100)
 
-      val constraint1: Constraint = ifThen(len #= 1) {
+      IfThen(len #= 1) {
         c #= 50
       }
 
-      val constraint2: Constraint = ifThen(len #= 2) {
+      IfThen(len #= 2) {
         c #= 40
       }
 
-      val constraint3: Constraint = ifThen(len #= 3) {
+      IfThen(len #= 3) {
         c #= 70
       }
 
@@ -295,7 +294,7 @@ class TestRandJacop extends FlatSpec with VerificationContext {
       override def toString: String = "Packet1"
       val len:               Rand = new Rand(1, 3)
       val c:                 Rand = new Rand(1, 100)
-      val constraint1:       crv.Constraint = ifThenElse(len #= 1)(c #= 50)(c #= 100)
+      IfThenElse(len #= 1)(c #= 50)(c #= 100)
     }
 
     val myPacket = new Packet(new Model)

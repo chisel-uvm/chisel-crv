@@ -1,6 +1,5 @@
 package backends.jacop
 
-import org.jacop.constraints.{IfThen, IfThenElse, PrimitiveConstraint}
 import org.jacop.core.IntDomain
 import org.jacop.search.{
   DepthFirstSearch,
@@ -98,36 +97,14 @@ class RandObj(val _model: Model) extends crv.RandObj {
     nOfCalls += 1
     if (!initialize) initializeObject()
     resetDomains()
+    preRandomize()
     _model.randcVars.foreach(_.next())
-    RandObj.satisfySearch(
+    val result = RandObj.satisfySearch(
       new SimpleSelect[Rand](problemVariables.toArray, null, new IndomainRandom[Rand](_model.seed + nOfCalls)),
       listener,
       _model
     )
-  }
-
-  override def ifThen(constraint: crv.Constraint)(z: crv.Constraint): Constraint = {
-    val newConstraint =
-      new IfThen(
-        constraint.getConstraint.asInstanceOf[PrimitiveConstraint],
-        z.getConstraint.asInstanceOf[PrimitiveConstraint]
-      )
-    _model.constr += newConstraint
-    constraint.disable()
-    z.disable()
-    new Constraint(newConstraint)
-  }
-
-  override def ifThenElse(ifC: crv.Constraint)(thenC: crv.Constraint)(elseC: crv.Constraint): crv.Constraint = {
-    val newConstraint = new IfThenElse(
-      ifC.getConstraint.asInstanceOf[PrimitiveConstraint],
-      thenC.getConstraint.asInstanceOf[PrimitiveConstraint],
-      elseC.getConstraint.asInstanceOf[PrimitiveConstraint]
-    )
-    _model.constr += newConstraint
-    ifC.disable()
-    thenC.disable()
-    elseC.disable()
-    new Constraint(newConstraint)
+    postRandomize()
+    result
   }
 }
