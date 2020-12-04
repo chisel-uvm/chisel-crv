@@ -3,10 +3,9 @@ package backends.jacop
 import org.jacop.constraints.PrimitiveConstraint
 
 /**
- * Since is not all the csp solver have support for conditional constraints, the IfThen and IfThenElse are not part of
- * the common crv package.
- */
-
+  * Since is not all the csp solver have support for conditional constraints, the IfThen and IfThenElse are not part of
+  * the common crv package.
+  */
 
 /**
   * Helper object for defining a conditional constraint
