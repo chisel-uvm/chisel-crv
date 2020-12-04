@@ -1,3 +1,3 @@
 package crv
 
-class Domain {}
+trait Domain {}

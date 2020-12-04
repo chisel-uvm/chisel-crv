@@ -141,14 +141,10 @@ class Rand(name: String, min: Int, max: Int)(implicit val model: Model)
     * @param that a second parameter for equation [[Constraint]].
     * @return the defined [[Constraint]].
     */
-  def #=(that: Rand): crv.Constraint = {
-    that match {
-      case v: backends.jacop.Rand =>
-        val c = new XeqY(this, v.asInstanceOf[org.jacop.core.IntVar])
-        model.constr += c
-        new Constraint(c)
-      case _ => throw new Exception("Can't mix in two different backends")
-    }
+  def #=(that: backends.jacop.Rand): crv.Constraint = {
+    val c = new XeqY(this, that)
+    model.constr += c
+    new Constraint(c)
   }
 
   /**
@@ -215,12 +211,7 @@ class Rand(name: String, min: Int, max: Int)(implicit val model: Model)
     */
   def div(that: BigInt): Rand = {
     require(that < Int.MaxValue)
-    val tmp = new Rand(that.toInt, that.toInt)
-    val bounds = IntDomain.divBounds(this.min(), this.max(), that.toInt, that.toInt)
-    val result = new Rand(bounds.min(), bounds.max())
-    val c = new XdivYeqZ(this, tmp, result)
-    model.constr += c
-    result
+    this.div(new Rand(that.toInt, that.toInt))
   }
 
   /**
@@ -258,25 +249,7 @@ class Rand(name: String, min: Int, max: Int)(implicit val model: Model)
     */
   def mod(that: BigInt): Rand = {
     require(that <= Int.MaxValue)
-    var reminderMin: Int = 0
-    var reminderMax: Int = 0
-    val tmp = new Rand(that.toInt, that.toInt)
-
-    if (this.min() >= 0) {
-      reminderMin = 0
-      reminderMax = Math.max(Math.abs(tmp.min()), Math.abs(tmp.max())) - 1
-    } else if (this.max() < 0) {
-      reminderMax = 0
-      reminderMin = -Math.max(Math.abs(tmp.min()), Math.abs(tmp.max())) + 1
-    } else {
-      reminderMin = Math.min(Math.min(tmp.min(), -tmp.min()), Math.min(tmp.max(), -tmp.max())) + 1
-      reminderMax = Math.max(Math.max(tmp.min(), -tmp.min()), Math.max(tmp.max(), -tmp.max())) - 1
-    }
-
-    val result = new Rand(reminderMin, reminderMax)
-    val c = new XmodYeqZ(this, tmp, result)
-    model.constr += c
-    result
+    this.mod(new Rand(that.toInt, that.toInt))
   }
 
   /**
@@ -300,11 +273,7 @@ class Rand(name: String, min: Int, max: Int)(implicit val model: Model)
     */
   def ^(that: BigInt): Rand = {
     require(that <= Int.MaxValue)
-    val tmp = new Rand(that.toInt, that.toInt)
-    val result = new Rand()
-    val c = new XexpYeqZ(this, tmp, result)
-    model.constr += c
-    result
+    this ^ new Rand(that.toInt, that.toInt)
   }
 
   /**

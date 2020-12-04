@@ -115,7 +115,7 @@ Other usage examples can be found in `src/test/scala/backends/jacop`
 # How to use chisel-crv inside your project
 The fastest way to include chisel-crv inside your project is to clone the git repository and publish it locally
 ```bash
-git clone https://www.github.com/parzival3/chisel-crv.git
+git clone https://www.github.com/chisel-uvm/chisel-crv.git
 cd chisel-crv
 sbt publishLocal
 ```

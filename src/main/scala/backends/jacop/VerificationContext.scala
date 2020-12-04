@@ -3,7 +3,7 @@ package backends.jacop
 trait VerificationContext extends crv.VerificationContext {
 
   /**
-    * Converts integer to IntVar.
+    * Converts a BigInt to [[Rand]].
     *
     * @param i integer to be converted.
     */
@@ -11,6 +11,11 @@ trait VerificationContext extends crv.VerificationContext {
     require(i < Int.MaxValue)
     new Rand(i.toInt, i.toInt)
   }
-  implicit def RandToInt(r:   Rand): Int = r.value()
-  implicit def IntToBigInt(i: Int):  BigInt = BigInt(i)
+
+  /**
+    * Converts a Rand to BigInt.
+    *
+    * @param r [[Rand]] variable to be converted.
+    */
+  implicit def RandToBigInt(r: Rand): BigInt = r.value()
 }

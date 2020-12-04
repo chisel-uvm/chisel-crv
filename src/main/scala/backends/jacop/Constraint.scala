@@ -7,17 +7,30 @@ import org.jacop.core.{Store, Var}
 
 class Constraint(private val constraint: org.jacop.constraints.PrimitiveConstraint)(implicit model: Model)
     extends crv.Constraint {
+
   override type U = PrimitiveConstraint
+
+  /**
+    * Disable the current constraint
+    */
   override def disable(): Unit = {
     model.constr -= constraint
     constraint.removeConstraint()
   }
 
+  /**
+    * Enables the current constraint. Each constraint is by default enable when instantiated. This method has effect only
+    * if called after [[disable]]
+    */
   override def enable(): Unit = {
     model.constr += constraint
     model.addChanged(constraint)
   }
 
+  /**
+    * Returns the current constraint. This method was introduced as an helper class for the jacop backend
+    * @return [[Constraint]]
+    */
   override def getConstraint: PrimitiveConstraint = constraint
 
   /**
@@ -46,7 +59,7 @@ class Constraint(private val constraint: org.jacop.constraints.PrimitiveConstrai
     * @param mode decides if pruning event for consistency or nonconsistency is required.
     * @return pruning event associated with the given variable for a given consistency mode.
     */
-  def getNestedPruningEvent(`var`: Var, mode: Boolean): Int = getNestedPruningEvent(`var`, mode)
+  def getNestedPruningEvent(`var`: Var, mode: Boolean): Int = constraint.getNestedPruningEvent(`var`, mode)
 
   /**
     * It makes pruning in such a way that constraint is notConsistent. It
