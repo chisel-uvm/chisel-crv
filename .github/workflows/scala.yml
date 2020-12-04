@@ -25,5 +25,10 @@ jobs:
       - name: Create Coverage Report
         run: sbt coverageAggregate
 
+      # Just a simple test run to check if the package can be actually publish
+      # locally, mainly to check if the documentation is ok
+      - name: Publish Local
+        run: sbt publishLocal
+
       # - name: CodeCov
       #  run: bash <(curl -s https://codecov.io/bash) -t ${{ secrets.CODECOV_SECRET }}
