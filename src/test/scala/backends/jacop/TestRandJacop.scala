@@ -211,7 +211,8 @@ class TestRandJacop extends FlatSpec with VerificationContext {
     assert(myPacket.payload(0) > myPacket.len)
     assert(myPacket.payload(1) > 98)
     myPacket.cgroup.disable()
-    myPacket.cgroup.enable()
+    myPacket.negc.enable()
+
     assert(myPacket.randomize)
     assert(myPacket.payload(1) < 98)
   }
