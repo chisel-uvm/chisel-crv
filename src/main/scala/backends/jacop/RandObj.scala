@@ -59,7 +59,7 @@ class RandObj(val _model: Model) extends crv.RandObj {
     * Restore the domain of all [[Rand]] variable declared in the current [[RandObj]] to their initial values
     */
   private def resetDomains(): Unit = {
-    domainDatabase.foreach(k => k._1.domain.setDomain(k._2))
+    domainDatabase.foreach(k => k._1.setDomain(k._2))
   }
 
   override def toString: String = {
