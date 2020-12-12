@@ -1,4 +1,6 @@
-package backends.jacop
+package crv.backends.jacop
+
+import org.jacop.scala.trace
 
 import scala.util.Random
 
@@ -10,4 +12,7 @@ import scala.util.Random
 class Model(val seed: Int = new Random().nextInt()) extends org.jacop.scala.Model {
   import scala.collection.mutable.ListBuffer
   val randcVars = new ListBuffer[Randc]
+  def apply(s: String): Rand = {
+    vars.filter(_ != null).find(_.id() == s).get.asInstanceOf[Rand]
+  }
 }

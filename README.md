@@ -26,6 +26,7 @@ constraint legal {
 ### Chisel CRV / jacop backend
 ```scala
 import backends.jacop._
+import crv.backends.jacop.{ConstraintGroup, Model, Rand, RandArr, RandObj, Randc}
 
 class Frame extends RandObj(new Model) {
   val pkType: Rand = new Rand(0, 3)
@@ -46,6 +47,7 @@ Random objects can be created by extending the RandObj trait. This class accepts
 correspond to a database in which all the random variable and constraint declared inside the RandObj are stored.
 ```scala
 import backends.jacop._
+import crv.backends.jacop.{Model, RandObj}
 class Frame extends RandObj(new Model)
 ```
 A model can be initialized with a seed `new Model(42)`, which allows the user to specify reproducible tests.

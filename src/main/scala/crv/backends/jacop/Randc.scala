@@ -1,4 +1,4 @@
-package backends.jacop
+package crv.backends.jacop
 
 import scala.util.Random
 

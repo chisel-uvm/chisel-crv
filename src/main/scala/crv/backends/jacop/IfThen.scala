@@ -1,4 +1,4 @@
-package backends.jacop
+package crv.backends.jacop
 
 import org.jacop.constraints.PrimitiveConstraint
 
@@ -8,28 +8,26 @@ import org.jacop.constraints.PrimitiveConstraint
   */
 
 /**
-  * Helper object for defining a conditional constraint
+  * Helper object for defining IfThen constraints
   */
-object IfThenElse {
+object IfThen {
 
   /**
     * If then constraint
     * @param ifC the if condition represented as a constraint
     * @param thenC the constraint to be applied if the ifC condition is true
-    * @param elseC the constraint to be applied in case the ifC condition is false
     * @param model the current [[Model]], constraint can only be defined inside a [[RandObj]]
     * @return return the newly constructed [[Constraint]]
     */
-  def apply(ifC: crv.Constraint)(thenC: crv.Constraint)(elseC: crv.Constraint)(implicit model: Model): Constraint = {
-    val newConstraint = new org.jacop.constraints.IfThenElse(
-      ifC.getConstraint.asInstanceOf[PrimitiveConstraint],
-      thenC.getConstraint.asInstanceOf[PrimitiveConstraint],
-      elseC.getConstraint.asInstanceOf[PrimitiveConstraint]
-    )
+  def apply(ifC: crv.Constraint)(thenC: crv.Constraint)(implicit model: Model): Constraint = {
+    val newConstraint =
+      new org.jacop.constraints.IfThen(
+        ifC.getConstraint.asInstanceOf[PrimitiveConstraint],
+        thenC.getConstraint.asInstanceOf[PrimitiveConstraint]
+      )
     model.constr += newConstraint
     ifC.disable()
     thenC.disable()
-    elseC.disable()
     new Constraint(newConstraint)
   }
 }

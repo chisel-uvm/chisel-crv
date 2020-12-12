@@ -1,4 +1,4 @@
-package backends.jacop
+package crv.backends.jacop
 
 class ConstraintGroup(group: Constraint*) extends crv.ConstraintGroup {
 
