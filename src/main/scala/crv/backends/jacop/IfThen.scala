@@ -1,4 +1,4 @@
-package backends.jacop
+package crv.backends.jacop
 
 import org.jacop.constraints.PrimitiveConstraint
 
@@ -25,9 +25,10 @@ object IfThen {
         ifC.getConstraint.asInstanceOf[PrimitiveConstraint],
         thenC.getConstraint.asInstanceOf[PrimitiveConstraint]
       )
-    model.constr += newConstraint
+    val crvc = new Constraint(newConstraint)
+    model.crvconstr += crvc
     ifC.disable()
     thenC.disable()
-    new Constraint(newConstraint)
+    crvc
   }
 }

@@ -22,42 +22,42 @@ trait Rand {
     * @param that a second parameter for the addition constraint
     * @return rand variable being the result of the addition constraint.
     */
-  def +(that: U): U
+  def #+(that: U): U
 
   /**
     * defines the add constraint between a [[Rand]] variable and a BigInt.
     * @param that a second parameter for the addition constraint
     * @return rand variable being the result of the addition constraint.
     */
-  def +(that: BigInt): U
+  def #+(that: BigInt): U
 
   /**
     * defines the subtraction constraint between two [[Rand]] variables.
     * @param that a second parameter for the addition constraint
     * @return rand variable being the result of the addition constraint.
     */
-  def -(that: U): U
+  def #-(that: U): U
 
   /**
     * defines the subtraction constraint between a [[Rand]] variable and a BigInt.
     * @param that a second parameter for the addition constraint
     * @return rand variable being the result of the addition constraint.
     */
-  def -(that: BigInt): U
+  def #-(that: BigInt): U
 
   /**
     * defines the multiplication constraint between two [[Rand]] variables.
     * @param that a second parameter for the addition constraint
     * @return rand variable being the result of the addition constraint.
     */
-  def *(that: U): U
+  def #*(that: U): U
 
   /**
     * defines the multiplication constraint between a [[Rand]] variable and a BigInt.
     * @param that a second parameter for the addition constraint
     * @return rand variable being the result of the addition constraint.
     */
-  def *(that: BigInt): U
+  def #*(that: BigInt): U
 
   /**
     * defines the division constraint between two [[Rand]] variables.
@@ -92,14 +92,14 @@ trait Rand {
     * @param that a second parameter for the addition constraint
     * @return rand variable being the result of the addition constraint.
     */
-  def ^(that: U): U
+  def #^(that: U): U
 
   /**
     * defines the exponential constraint between a [[Rand]] variable and a BigInt.
     * @param that a second parameter for the addition constraint
     * @return rand variable being the result of the addition constraint.
     */
-  def ^(that: BigInt): U
+  def #^(that: BigInt): U
 
   /**
     * Defines inequality [[Constraint]] between [[Rand]] and BigInt constant.

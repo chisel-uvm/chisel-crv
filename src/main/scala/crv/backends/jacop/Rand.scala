@@ -1,4 +1,4 @@
-package backends.jacop
+package crv.backends.jacop
 
 import org.jacop.constraints._
 import org.jacop.core.IntDomain
@@ -87,10 +87,10 @@ class Rand(name: String, min: Int, max: Int)(implicit val model: Model)
     * @param that a second parameter for the addition constraint
     * @return [[Rand]] variable being the result of the addition [[Constraint]].
     */
-  def +(that: backends.jacop.Rand): Rand = {
+  def #+(that: Rand): Rand = {
     val result = new Rand(IntDomain.addInt(this.min(), that.min()), IntDomain.addInt(this.max(), that.max()))
     val c = new XplusYeqZ(this, that, result)
-    model.constr += c
+    model.crvconstr += new Constraint(c)
     result
   }
 
@@ -100,11 +100,11 @@ class Rand(name: String, min: Int, max: Int)(implicit val model: Model)
     * @param that a second integer parameter for the addition [[Constraint]].
     * @return [[Rand]] variable being the result of the addition [[Constraint]].
     */
-  def +(that: BigInt): Rand = {
+  def #+(that: BigInt): Rand = {
     require(that <= Int.MaxValue)
     val result = new Rand(IntDomain.addInt(this.min(), that.toInt), IntDomain.addInt(this.max(), that.toInt))
     val c = new XplusCeqZ(this, that.toInt, result)
-    model.constr += c
+    model.crvconstr += new Constraint(c)
     result
   }
 
@@ -114,10 +114,10 @@ class Rand(name: String, min: Int, max: Int)(implicit val model: Model)
     * @param that a second parameter for the subtraction [[Constraint]].
     * @return [[Rand]] variable being the result of the subtraction [[Constraint]].
     */
-  def -(that: backends.jacop.Rand): Rand = {
+  def #-(that: Rand): Rand = {
     val result = new Rand(IntDomain.subtractInt(this.min(), that.max()), IntDomain.subtractInt(this.max(), that.min()))
     val c = new XplusYeqZ(result, that, this)
-    model.constr += c
+    model.crvconstr += new Constraint(c)
     result
   }
 
@@ -127,11 +127,12 @@ class Rand(name: String, min: Int, max: Int)(implicit val model: Model)
     * @param that a second integer parameter for the subtraction [[Constraint]].
     * @return [[Rand]] variable being the result of the subtraction [[Constraint]].
     */
-  def -(that: BigInt): Rand = {
+  def #-(that: BigInt): Rand = {
     require(that <= Int.MaxValue)
     val result = new Rand(IntDomain.subtractInt(this.min(), that.toInt), IntDomain.subtractInt(this.max(), that.toInt))
     val c = new XplusCeqZ(result, that.toInt, this)
-    model.constr += c
+    val crvc = new Constraint(c)
+    model.crvconstr += crvc
     result
   }
 
@@ -141,10 +142,11 @@ class Rand(name: String, min: Int, max: Int)(implicit val model: Model)
     * @param that a second parameter for equation [[Constraint]].
     * @return the defined [[Constraint]].
     */
-  def #=(that: backends.jacop.Rand): crv.Constraint = {
+  def #=(that: Rand): Constraint = {
     val c = new XeqY(this, that)
-    model.constr += c
-    new Constraint(c)
+    val crvc = new Constraint(c)
+    model.crvconstr += crvc
+    crvc
   }
 
   /**
@@ -153,11 +155,12 @@ class Rand(name: String, min: Int, max: Int)(implicit val model: Model)
     * @param that a second parameter for equation [[Constraint]].
     * @return the defined [[Constraint]].
     */
-  def #=(that: BigInt): crv.Constraint = {
+  def #=(that: BigInt): Constraint = {
     require(that <= Int.MaxValue)
     val c = new XeqC(this, that.toInt)
-    model.constr += c
-    new Constraint(c)
+    val crvc = new Constraint(c)
+    model.crvconstr += crvc
+    crvc
   }
 
   /**
@@ -166,11 +169,11 @@ class Rand(name: String, min: Int, max: Int)(implicit val model: Model)
     * @param that a second parameter for the multiplication [[Constraint]].
     * @return [[Rand]] variable being the result of the multiplication [[Constraint]].
     */
-  def *(that: backends.jacop.Rand): Rand = {
+  def #*(that: Rand): Rand = {
     val bounds = IntDomain.mulBounds(this.min(), this.max(), that.min(), that.max())
     val result = new Rand(bounds.min(), bounds.max())
     val c = new XmulYeqZ(this, that, result)
-    model.constr += c
+    model.crvconstr += new Constraint(c)
     result
   }
 
@@ -180,12 +183,12 @@ class Rand(name: String, min: Int, max: Int)(implicit val model: Model)
     * @param that a second integer parameter for the multiplication [[Constraint]].
     * @return [[Rand]] variable being the result of the multiplication [[Constraint]].
     */
-  def *(that: BigInt): Rand = {
+  def #*(that: BigInt): Rand = {
     require(that <= Int.MaxValue)
     val bounds = IntDomain.mulBounds(this.min(), this.max(), that.toInt, that.toInt)
     val result = new Rand(bounds.min(), bounds.max())
     val c = new XmulCeqZ(this, that.toInt, result)
-    model.constr += c
+    model.crvconstr += new Constraint(c)
     result
   }
 
@@ -195,11 +198,11 @@ class Rand(name: String, min: Int, max: Int)(implicit val model: Model)
     * @param that a second parameter for the integer division [[Constraint]].
     * @return [[Rand]] variable being the result of the integer division [[Constraint]].
     */
-  def div(that: backends.jacop.Rand): Rand = {
+  def div(that: Rand): Rand = {
     val bounds = IntDomain.divBounds(this.min(), this.max(), that.min(), that.max())
     val result = new Rand(bounds.min(), bounds.max())
     val c = new XdivYeqZ(this, that, result)
-    model.constr += c
+    model.crvconstr += new Constraint(c)
     result
   }
 
@@ -220,7 +223,7 @@ class Rand(name: String, min: Int, max: Int)(implicit val model: Model)
     * @param that a second parameter for integer reminder from division [[Constraint]].
     * @return [[Rand]] variable being the result of the integer reminder from division [[Constraint]].
     */
-  def mod(that: backends.jacop.Rand): Rand = {
+  def mod(that: Rand): Rand = {
     var reminderMin: Int = 0
     var reminderMax: Int = 0
 
@@ -237,7 +240,7 @@ class Rand(name: String, min: Int, max: Int)(implicit val model: Model)
 
     val result = new Rand(reminderMin, reminderMax)
     val c = new XmodYeqZ(this, that, result)
-    model.constr += c
+    model.crvconstr += new Constraint(c)
     result
   }
 
@@ -258,10 +261,10 @@ class Rand(name: String, min: Int, max: Int)(implicit val model: Model)
     * @param that exponent for the exponentiation [[Constraint]].
     * @return [[Rand]] variable being the result of the exponentiation [[Constraint]].
     */
-  def ^(that: backends.jacop.Rand): Rand = {
+  def #^(that: Rand): Rand = {
     val result = new Rand()
     val c = new XexpYeqZ(this, that, result)
-    model.constr += c
+    model.crvconstr += new Constraint(c)
     result
   }
 
@@ -271,9 +274,9 @@ class Rand(name: String, min: Int, max: Int)(implicit val model: Model)
     * @param that exponent for the exponentiation [[Constraint]].
     * @return [[Rand]] variable being the result of the exponentiation [[Constraint]].
     */
-  def ^(that: BigInt): Rand = {
+  def #^(that: BigInt): Rand = {
     require(that <= Int.MaxValue)
-    this ^ new Rand(that.toInt, that.toInt)
+    this #^ new Rand(that.toInt, that.toInt)
   }
 
   /**
@@ -284,7 +287,7 @@ class Rand(name: String, min: Int, max: Int)(implicit val model: Model)
   def unary_- : Rand = {
     val result = new Rand(-this.max(), -this.min())
     val c = new XplusYeqC(this, result, 0)
-    model.constr += c
+    model.crvconstr += new Constraint(c)
     result
   }
 
@@ -294,10 +297,11 @@ class Rand(name: String, min: Int, max: Int)(implicit val model: Model)
     * @param that a second parameter for inequality [[Constraint]].
     * @return the defined [[Constraint]].
     */
-  def #\=(that: backends.jacop.Rand): crv.Constraint = {
+  def #\=(that: Rand): Constraint = {
     val c = new XneqY(this, that)
-    model.constr += c
-    new Constraint(c)
+    val crvc = new Constraint(c)
+    model.crvconstr += crvc
+    crvc
   }
 
   /**
@@ -306,11 +310,12 @@ class Rand(name: String, min: Int, max: Int)(implicit val model: Model)
     * @param that a second parameter for inequality [[Constraint]].
     * @return the defined [[Constraint]].
     */
-  def #\=(that: BigInt): crv.Constraint = {
+  def #\=(that: BigInt): Constraint = {
     require(that <= Int.MaxValue)
     val c = new XneqC(this, that.toInt)
-    model.constr += c
-    new Constraint(c)
+    val crvc = new Constraint(c)
+    model.crvconstr += crvc
+    crvc
   }
 
   /**
@@ -319,10 +324,11 @@ class Rand(name: String, min: Int, max: Int)(implicit val model: Model)
     * @param that a second parameter for "less than" [[Constraint]].
     * @return the defined [[Constraint]].
     */
-  def #<(that: backends.jacop.Rand): crv.Constraint = {
+  def #<(that: Rand): Constraint = {
     val c = new XltY(this, that)
-    model.constr += c
-    new Constraint(c)
+    val crvc = new Constraint(c)
+    model.crvconstr += crvc
+    crvc
   }
 
   /**
@@ -331,11 +337,12 @@ class Rand(name: String, min: Int, max: Int)(implicit val model: Model)
     * @param that a second parameter for "less than" [[Constraint]].
     * @return the equation [[Constraint]].
     */
-  def #<(that: BigInt): crv.Constraint = {
+  def #<(that: BigInt): Constraint = {
     require(that <= Int.MaxValue)
     val c = new XltC(this, that.toInt)
-    model.constr += c
-    new Constraint(c)
+    val crvc = new Constraint(c)
+    model.crvconstr += crvc
+    crvc
   }
 
   /**
@@ -344,10 +351,11 @@ class Rand(name: String, min: Int, max: Int)(implicit val model: Model)
     * @param that a second parameter for "less than or equal" [[Constraint]].
     * @return the defined [[Constraint]].
     */
-  def #<=(that: backends.jacop.Rand): crv.Constraint = {
+  def #<=(that: Rand): Constraint = {
     val c = new XlteqY(this, that)
-    model.constr += c
-    new Constraint(c)
+    val crvc = new Constraint(c)
+    model.crvconstr += crvc
+    crvc
   }
 
   /**
@@ -356,11 +364,12 @@ class Rand(name: String, min: Int, max: Int)(implicit val model: Model)
     * @param that a second parameter for "less than or equal" [[Constraint]].
     * @return the equation [[Constraint]].
     */
-  def #<=(that: BigInt): crv.Constraint = {
+  def #<=(that: BigInt): Constraint = {
     require(that <= Int.MaxValue)
     val c = new XlteqC(this, that.toInt)
-    model.constr += c
-    new Constraint(c)
+    val crvc = new Constraint(c)
+    model.crvconstr += crvc
+    crvc
   }
 
   /**
@@ -369,10 +378,11 @@ class Rand(name: String, min: Int, max: Int)(implicit val model: Model)
     * @param that a second parameter for "greater than" [[Constraint]].
     * @return the defined [[Constraint]].
     */
-  def #>(that: backends.jacop.Rand): crv.Constraint = {
+  def #>(that: Rand): Constraint = {
     val c = new XgtY(this, that)
-    model.constr += c
-    new Constraint(c)
+    val crvc = new Constraint(c)
+    model.crvconstr += crvc
+    crvc
   }
 
   /**
@@ -381,11 +391,12 @@ class Rand(name: String, min: Int, max: Int)(implicit val model: Model)
     * @param that a second parameter for "greater than" [[Constraint]].
     * @return the equation [[Constraint]].
     */
-  def #>(that: BigInt): crv.Constraint = {
+  def #>(that: BigInt): Constraint = {
     require(that <= Int.MaxValue)
     val c = new XgtC(this, that.toInt)
-    model.constr += c
-    new Constraint(c)
+    val crvc = new Constraint(c)
+    model.crvconstr += crvc
+    crvc
   }
 
   /**
@@ -394,10 +405,11 @@ class Rand(name: String, min: Int, max: Int)(implicit val model: Model)
     * @param that a second parameter for "greater than or equal" [[Constraint]].
     * @return the defined [[Constraint]].
     */
-  def #>=(that: backends.jacop.Rand): crv.Constraint = {
+  def #>=(that: Rand): Constraint = {
     val c = new XgteqY(this, that)
-    model.constr += c
-    new Constraint(c)
+    val crvc = new Constraint(c)
+    model.crvconstr += crvc
+    crvc
   }
 
   /**
@@ -406,11 +418,12 @@ class Rand(name: String, min: Int, max: Int)(implicit val model: Model)
     * @param that a second parameter for "greater than or equal" [[Constraint]].
     * @return the equation [[Constraint]].
     */
-  def #>=(that: BigInt): crv.Constraint = {
+  def #>=(that: BigInt): Constraint = {
     require(that <= Int.MaxValue)
     val c = new XgteqC(this, that.toInt)
-    model.constr += c
-    new Constraint(c)
+    val crvc = new Constraint(c)
+    model.crvconstr += crvc
+    crvc
   }
 
   /**
@@ -419,15 +432,17 @@ class Rand(name: String, min: Int, max: Int)(implicit val model: Model)
     * @param that set that this variable's value must be included.
     * @return the equation [[Constraint]].
     */
-  def in(that: SetVar): crv.Constraint = {
+  def in(that: SetVar): Constraint = {
     if (min == max) {
       val c = new EinA(min, that)
-      model.constr += c
-      new Constraint(c)
+      val crvc = new Constraint(c)
+      model.crvconstr += crvc
+      crvc
     } else {
       val c = new XinA(this, that)
-      model.constr += c
-      new Constraint(c)
+      val crvc = new Constraint(c)
+      model.crvconstr += crvc
+      crvc
     }
   }
 
@@ -437,7 +452,7 @@ class Rand(name: String, min: Int, max: Int)(implicit val model: Model)
     * @param that set that this variable's value must be included.
     * @return the equation [[Constraint]].
     */
-  def inside(that: SetVar): crv.Constraint = {
+  def inside(that: SetVar): Constraint = {
     this.in(that)
   }
 }
