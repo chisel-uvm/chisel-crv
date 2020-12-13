@@ -125,11 +125,6 @@ trait RandBundle extends crv.RandObj {
     * @return Boolean the result of the current randomization
     */
   override def randomize: Boolean = {
-    val old = new Model(currentModel.seed)
-    old.vars = currentModel.vars
-    old.crvconstr ++= currentModel.crvconstr
-    old.crvconstr.foreach(x => x.model = old)
-    currentModel = old
     nOfCalls += 1
     if (!initialize) initializeObject()
     resetDomains()

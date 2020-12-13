@@ -50,6 +50,25 @@ class TestRandJacop extends FlatSpec with VerificationContext {
     assert(myPacket.len.value() >= myPacket.size.value())
   }
 
+  it should "be able to enable disable constraint 2" in {
+    class Packet extends RandObj(new Model) {
+      val min = 1
+      val max = 100
+      val size = new Rand("size", min, max)
+      val len = new Rand("len", min, max)
+      val grather = size #> len
+      // val smaller = size #< len
+    }
+    val myPacket = new Packet
+    myPacket.grather.disable()
+    assert(myPacket.randomize)
+    assert(myPacket.size < myPacket.len)
+    //myPacket.smaller.disable()
+    myPacket.grather.enable()
+    assert(myPacket.randomize)
+    assert(myPacket.size > myPacket.len)
+  }
+
   it should "be able to subtract two Rand var" in {
     class Packet extends RandObj(new Model) {
       val min = 1

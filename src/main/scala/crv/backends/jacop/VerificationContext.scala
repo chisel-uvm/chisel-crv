@@ -18,16 +18,16 @@ trait VerificationContext extends crv.VerificationContext {
         dontTouch(b)
       }
 
-      val module = ModuleElaboration.elaborate(() => new RandomBundleWrapper)
-      val portNames = DataMirror.fullModulePorts(module).drop(2)
-      val modelBinding = portNames.map(_._1).zipWithIndex.map {
-        case (name, index) =>
-          new Function1[Bundle, (Data, Data)] {
-            def apply(t: Bundle): (Data, Data) = t.getElements(index) -> bund.currentModel(name).value().U
-          }
-      }
-      val randomBundle = module.b.cloneType.Lit(modelBinding.toSeq: _*)
-      randomBundle
+//      val module = ModuleElaboration.elaborate(() => new RandomBundleWrapper)
+//      val portNames = DataMirror.fullModulePorts(module).drop(2)
+//      val modelBinding = portNames.map(_._1).zipWithIndex.map {
+//        case (name, index) =>
+//          new Function1[Bundle, (Data, Data)] {
+//            def apply(t: Bundle): (Data, Data) = t.getElements(index) -> bund.currentModel(name).value().U
+//          }
+//      }
+//      val randomBundle = module.b.cloneType.Lit(modelBinding.toSeq: _*)
+//      randomBundle
     }
   }
 
