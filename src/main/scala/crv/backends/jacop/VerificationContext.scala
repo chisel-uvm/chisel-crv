@@ -10,7 +10,7 @@ trait VerificationContext extends crv.VerificationContext {
   implicit class VerifBundle[T <: Bundle](bundle: T) extends Bundle {
     def myRand() = {
       val bund = bundle.asInstanceOf[RandBundle]
-      println(bund.randomize)
+      assert(bund.randomize)
 
       class RandomBundleWrapper extends RawModule {
         val clock = IO(Input(Clock()))

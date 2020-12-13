@@ -82,132 +82,135 @@ class Rand(name: String, min: Int, max: Int)(implicit val model: Model)
   }
 
   /**
-    * Defines the add [[constraints.Constraint]] between two Rand variables
+    * Defines the add [[Constraint]] between two Rand variables
     *
     * @param that a second parameter for the addition constraint
-    * @return [[Rand]] variable being the result of the addition [[constraints.Constraint]].
+    * @return [[Rand]] variable being the result of the addition [[Constraint]].
     */
   def #+(that: Rand): Rand = {
     val result = new Rand(IntDomain.addInt(this.min(), that.min()), IntDomain.addInt(this.max(), that.max()))
     val c = new XplusYeqZ(this, that, result)
-    model.constr += c
+    model.crvconstr += new Constraint(c)
     result
   }
 
   /**
-    * Defines add [[constraints.Constraint]] between Rand and an integer value.
+    * Defines add [[Constraint]] between Rand and an integer value.
     *
-    * @param that a second integer parameter for the addition [[constraints.Constraint]].
-    * @return [[Rand]] variable being the result of the addition [[constraints.Constraint]].
+    * @param that a second integer parameter for the addition [[Constraint]].
+    * @return [[Rand]] variable being the result of the addition [[Constraint]].
     */
   def #+(that: BigInt): Rand = {
     require(that <= Int.MaxValue)
     val result = new Rand(IntDomain.addInt(this.min(), that.toInt), IntDomain.addInt(this.max(), that.toInt))
     val c = new XplusCeqZ(this, that.toInt, result)
-    model.constr += c
+    model.crvconstr += new Constraint(c)
     result
   }
 
   /**
-    * Defines subtract [[constraints.Constraint]] between two Rand.
+    * Defines subtract [[Constraint]] between two Rand.
     *
-    * @param that a second parameter for the subtraction [[constraints.Constraint]].
-    * @return [[Rand]] variable being the result of the subtraction [[constraints.Constraint]].
+    * @param that a second parameter for the subtraction [[Constraint]].
+    * @return [[Rand]] variable being the result of the subtraction [[Constraint]].
     */
   def #-(that: Rand): Rand = {
     val result = new Rand(IntDomain.subtractInt(this.min(), that.max()), IntDomain.subtractInt(this.max(), that.min()))
     val c = new XplusYeqZ(result, that, this)
-    model.constr += c
+    model.crvconstr += new Constraint(c)
     result
   }
 
   /**
-    * Defines subtract [[constraints.Constraint]] between [[Rand]] and an integer value.
+    * Defines subtract [[Constraint]] between [[Rand]] and an integer value.
     *
-    * @param that a second integer parameter for the subtraction [[constraints.Constraint]].
-    * @return [[Rand]] variable being the result of the subtraction [[constraints.Constraint]].
+    * @param that a second integer parameter for the subtraction [[Constraint]].
+    * @return [[Rand]] variable being the result of the subtraction [[Constraint]].
     */
   def #-(that: BigInt): Rand = {
     require(that <= Int.MaxValue)
     val result = new Rand(IntDomain.subtractInt(this.min(), that.toInt), IntDomain.subtractInt(this.max(), that.toInt))
     val c = new XplusCeqZ(result, that.toInt, this)
-    model.constr += c
+    val crvc = new Constraint(c)
+    model.crvconstr += crvc
     result
   }
 
   /**
-    * Defines equation [[constraints.Constraint]] between two [[Rand]].
+    * Defines equation [[Constraint]] between two [[Rand]].
     *
-    * @param that a second parameter for equation [[constraints.Constraint]].
-    * @return the defined [[constraints.Constraint]].
+    * @param that a second parameter for equation [[Constraint]].
+    * @return the defined [[Constraint]].
     */
-  def #=(that: Rand): crv.Constraint = {
+  def #=(that: Rand): Constraint = {
     val c = new XeqY(this, that)
-    model.constr += c
-    new Constraint(c)
+    val crvc = new Constraint(c)
+    model.crvconstr += crvc
+    crvc
   }
 
   /**
-    * Defines equation [[constraints.Constraint]] between [[Rand]] and a integer constant.
+    * Defines equation [[Constraint]] between [[Rand]] and a integer constant.
     *
-    * @param that a second parameter for equation [[constraints.Constraint]].
-    * @return the defined [[constraints.Constraint]].
+    * @param that a second parameter for equation [[Constraint]].
+    * @return the defined [[Constraint]].
     */
-  def #=(that: BigInt): crv.Constraint = {
+  def #=(that: BigInt): Constraint = {
     require(that <= Int.MaxValue)
     val c = new XeqC(this, that.toInt)
-    model.constr += c
-    new Constraint(c)
+    val crvc = new Constraint(c)
+    model.crvconstr += crvc
+    crvc
   }
 
   /**
-    * Defines multiplication [[constraints.Constraint]] between two [[Rand]].
+    * Defines multiplication [[Constraint]] between two [[Rand]].
     *
-    * @param that a second parameter for the multiplication [[constraints.Constraint]].
-    * @return [[Rand]] variable being the result of the multiplication [[constraints.Constraint]].
+    * @param that a second parameter for the multiplication [[Constraint]].
+    * @return [[Rand]] variable being the result of the multiplication [[Constraint]].
     */
   def #*(that: Rand): Rand = {
     val bounds = IntDomain.mulBounds(this.min(), this.max(), that.min(), that.max())
     val result = new Rand(bounds.min(), bounds.max())
     val c = new XmulYeqZ(this, that, result)
-    model.constr += c
+    model.crvconstr += new Constraint(c)
     result
   }
 
   /**
-    * Defines multiplication [[constraints.Constraint]] between [[Rand]] and an integer value.
+    * Defines multiplication [[Constraint]] between [[Rand]] and an integer value.
     *
-    * @param that a second integer parameter for the multiplication [[constraints.Constraint]].
-    * @return [[Rand]] variable being the result of the multiplication [[constraints.Constraint]].
+    * @param that a second integer parameter for the multiplication [[Constraint]].
+    * @return [[Rand]] variable being the result of the multiplication [[Constraint]].
     */
   def #*(that: BigInt): Rand = {
     require(that <= Int.MaxValue)
     val bounds = IntDomain.mulBounds(this.min(), this.max(), that.toInt, that.toInt)
     val result = new Rand(bounds.min(), bounds.max())
     val c = new XmulCeqZ(this, that.toInt, result)
-    model.constr += c
+    model.crvconstr += new Constraint(c)
     result
   }
 
   /**
-    * Defines integer division [[constraints.Constraint]] between two [[Rand]].
+    * Defines integer division [[Constraint]] between two [[Rand]].
     *
-    * @param that a second parameter for the integer division [[constraints.Constraint]].
-    * @return [[Rand]] variable being the result of the integer division [[constraints.Constraint]].
+    * @param that a second parameter for the integer division [[Constraint]].
+    * @return [[Rand]] variable being the result of the integer division [[Constraint]].
     */
   def div(that: Rand): Rand = {
     val bounds = IntDomain.divBounds(this.min(), this.max(), that.min(), that.max())
     val result = new Rand(bounds.min(), bounds.max())
     val c = new XdivYeqZ(this, that, result)
-    model.constr += c
+    model.crvconstr += new Constraint(c)
     result
   }
 
   /**
-    * Defines integer division [[constraints.Constraint]] between [[Rand]] and an integer value.
+    * Defines integer division [[Constraint]] between [[Rand]] and an integer value.
     *
-    * @param that a second parameter for the integer division [[constraints.Constraint]].
-    * @return [[Rand]] variable being the result of the integer division [[constraints.Constraint]].
+    * @param that a second parameter for the integer division [[Constraint]].
+    * @return [[Rand]] variable being the result of the integer division [[Constraint]].
     */
   def div(that: BigInt): Rand = {
     require(that < Int.MaxValue)
@@ -215,10 +218,10 @@ class Rand(name: String, min: Int, max: Int)(implicit val model: Model)
   }
 
   /**
-    * Defines [[constraints.Constraint]] for integer reminder from division between two [[Rand]].
+    * Defines [[Constraint]] for integer reminder from division between two [[Rand]].
     *
-    * @param that a second parameter for integer reminder from division [[constraints.Constraint]].
-    * @return [[Rand]] variable being the result of the integer reminder from division [[constraints.Constraint]].
+    * @param that a second parameter for integer reminder from division [[Constraint]].
+    * @return [[Rand]] variable being the result of the integer reminder from division [[Constraint]].
     */
   def mod(that: Rand): Rand = {
     var reminderMin: Int = 0
@@ -237,15 +240,15 @@ class Rand(name: String, min: Int, max: Int)(implicit val model: Model)
 
     val result = new Rand(reminderMin, reminderMax)
     val c = new XmodYeqZ(this, that, result)
-    model.constr += c
+    model.crvconstr += new Constraint(c)
     result
   }
 
   /**
-    * Defines [[constraints.Constraint]] for integer reminder from division [[Rand]] and an integer value.
+    * Defines [[Constraint]] for integer reminder from division [[Rand]] and an integer value.
     *
-    * @param that a second parameter for integer reminder from division [[constraints.Constraint]].
-    * @return [[Rand]] variable being the result of the integer reminder from division [[constraints.Constraint]].
+    * @param that a second parameter for integer reminder from division [[Constraint]].
+    * @return [[Rand]] variable being the result of the integer reminder from division [[Constraint]].
     */
   def mod(that: BigInt): Rand = {
     require(that <= Int.MaxValue)
@@ -253,23 +256,23 @@ class Rand(name: String, min: Int, max: Int)(implicit val model: Model)
   }
 
   /**
-    * Defines exponentiation [[constraints.Constraint]] between two [[Rand]].
+    * Defines exponentiation [[Constraint]] between two [[Rand]].
     *
-    * @param that exponent for the exponentiation [[constraints.Constraint]].
-    * @return [[Rand]] variable being the result of the exponentiation [[constraints.Constraint]].
+    * @param that exponent for the exponentiation [[Constraint]].
+    * @return [[Rand]] variable being the result of the exponentiation [[Constraint]].
     */
   def #^(that: Rand): Rand = {
     val result = new Rand()
     val c = new XexpYeqZ(this, that, result)
-    model.constr += c
+    model.crvconstr += new Constraint(c)
     result
   }
 
   /**
-    * Defines exponentiation [[constraints.Constraint]] between [[Rand]] and an integer value.
+    * Defines exponentiation [[Constraint]] between [[Rand]] and an integer value.
     *
-    * @param that exponent for the exponentiation [[constraints.Constraint]].
-    * @return [[Rand]] variable being the result of the exponentiation [[constraints.Constraint]].
+    * @param that exponent for the exponentiation [[Constraint]].
+    * @return [[Rand]] variable being the result of the exponentiation [[Constraint]].
     */
   def #^(that: BigInt): Rand = {
     require(that <= Int.MaxValue)
@@ -277,167 +280,179 @@ class Rand(name: String, min: Int, max: Int)(implicit val model: Model)
   }
 
   /**
-    * Defines unary "-" [[constraints.Constraint]] for [[Rand]].
+    * Defines unary "-" [[Constraint]] for [[Rand]].
     *
-    * @return the defined [[constraints.Constraint]].
+    * @return the defined [[Constraint]].
     */
   def unary_- : Rand = {
     val result = new Rand(-this.max(), -this.min())
     val c = new XplusYeqC(this, result, 0)
-    model.constr += c
+    model.crvconstr += new Constraint(c)
     result
   }
 
   /**
-    * Defines inequality [[constraints.Constraint]] between two [[Rand]].
+    * Defines inequality [[Constraint]] between two [[Rand]].
     *
-    * @param that a second parameter for inequality [[constraints.Constraint]].
-    * @return the defined [[constraints.Constraint]].
+    * @param that a second parameter for inequality [[Constraint]].
+    * @return the defined [[Constraint]].
     */
-  def #\=(that: Rand): crv.Constraint = {
+  def #\=(that: Rand): Constraint = {
     val c = new XneqY(this, that)
-    model.constr += c
-    new Constraint(c)
+    val crvc = new Constraint(c)
+    model.crvconstr += crvc
+    crvc
   }
 
   /**
-    * Defines inequality [[constraints.Constraint]] between [[Rand]] and integer constant.
+    * Defines inequality [[Constraint]] between [[Rand]] and integer constant.
     *
-    * @param that a second parameter for inequality [[constraints.Constraint]].
-    * @return the defined [[constraints.Constraint]].
+    * @param that a second parameter for inequality [[Constraint]].
+    * @return the defined [[Constraint]].
     */
-  def #\=(that: BigInt): crv.Constraint = {
+  def #\=(that: BigInt): Constraint = {
     require(that <= Int.MaxValue)
     val c = new XneqC(this, that.toInt)
-    model.constr += c
-    new Constraint(c)
+    val crvc = new Constraint(c)
+    model.crvconstr += crvc
+    crvc
   }
 
   /**
-    * Defines "less than" [[constraints.Constraint]] between two [[Rand]].
+    * Defines "less than" [[Constraint]] between two [[Rand]].
     *
-    * @param that a second parameter for "less than" [[constraints.Constraint]].
-    * @return the defined [[constraints.Constraint]].
+    * @param that a second parameter for "less than" [[Constraint]].
+    * @return the defined [[Constraint]].
     */
-  def #<(that: Rand): crv.Constraint = {
+  def #<(that: Rand): Constraint = {
     val c = new XltY(this, that)
-    model.constr += c
-    new Constraint(c)
+    val crvc = new Constraint(c)
+    model.crvconstr += crvc
+    crvc
   }
 
   /**
-    * Defines "less than" [[constraints.Constraint]] between [[Rand]] and integer constant.
+    * Defines "less than" [[Constraint]] between [[Rand]] and integer constant.
     *
-    * @param that a second parameter for "less than" [[constraints.Constraint]].
-    * @return the equation [[constraints.Constraint]].
+    * @param that a second parameter for "less than" [[Constraint]].
+    * @return the equation [[Constraint]].
     */
-  def #<(that: BigInt): crv.Constraint = {
+  def #<(that: BigInt): Constraint = {
     require(that <= Int.MaxValue)
     val c = new XltC(this, that.toInt)
-    model.constr += c
-    new Constraint(c)
+    val crvc = new Constraint(c)
+    model.crvconstr += crvc
+    crvc
   }
 
   /**
-    * Defines "less than or equal" [[constraints.Constraint]] between two [[Rand]].
+    * Defines "less than or equal" [[Constraint]] between two [[Rand]].
     *
-    * @param that a second parameter for "less than or equal" [[constraints.Constraint]].
-    * @return the defined [[constraints.Constraint]].
+    * @param that a second parameter for "less than or equal" [[Constraint]].
+    * @return the defined [[Constraint]].
     */
-  def #<=(that: Rand): crv.Constraint = {
+  def #<=(that: Rand): Constraint = {
     val c = new XlteqY(this, that)
-    model.constr += c
-    new Constraint(c)
+    val crvc = new Constraint(c)
+    model.crvconstr += crvc
+    crvc
   }
 
   /**
-    * Defines "less than or equal" [[constraints.Constraint]] between [[Rand]] and integer constant.
+    * Defines "less than or equal" [[Constraint]] between [[Rand]] and integer constant.
     *
-    * @param that a second parameter for "less than or equal" [[constraints.Constraint]].
-    * @return the equation [[constraints.Constraint]].
+    * @param that a second parameter for "less than or equal" [[Constraint]].
+    * @return the equation [[Constraint]].
     */
-  def #<=(that: BigInt): crv.Constraint = {
+  def #<=(that: BigInt): Constraint = {
     require(that <= Int.MaxValue)
     val c = new XlteqC(this, that.toInt)
-    model.constr += c
-    new Constraint(c)
+    val crvc = new Constraint(c)
+    model.crvconstr += crvc
+    crvc
   }
 
   /**
-    * Defines "greater than" [[constraints.Constraint]] between two [[Rand]].
+    * Defines "greater than" [[Constraint]] between two [[Rand]].
     *
-    * @param that a second parameter for "greater than" [[constraints.Constraint]].
-    * @return the defined [[constraints.Constraint]].
+    * @param that a second parameter for "greater than" [[Constraint]].
+    * @return the defined [[Constraint]].
     */
-  def #>(that: Rand): crv.Constraint = {
+  def #>(that: Rand): Constraint = {
     val c = new XgtY(this, that)
-    model.constr += c
-    new Constraint(c)
+    val crvc = new Constraint(c)
+    model.crvconstr += crvc
+    crvc
   }
 
   /**
-    * Defines "greater than" [[constraints.Constraint]] between [[Rand]] and integer constant.
+    * Defines "greater than" [[Constraint]] between [[Rand]] and integer constant.
     *
-    * @param that a second parameter for "greater than" [[constraints.Constraint]].
-    * @return the equation [[constraints.Constraint]].
+    * @param that a second parameter for "greater than" [[Constraint]].
+    * @return the equation [[Constraint]].
     */
-  def #>(that: BigInt): crv.Constraint = {
+  def #>(that: BigInt): Constraint = {
     require(that <= Int.MaxValue)
     val c = new XgtC(this, that.toInt)
-    model.constr += c
-    new Constraint(c)
+    val crvc = new Constraint(c)
+    model.crvconstr += crvc
+    crvc
   }
 
   /**
-    * Defines "greater than or equal" [[constraints.Constraint]] between two [[Rand]].
+    * Defines "greater than or equal" [[Constraint]] between two [[Rand]].
     *
-    * @param that a second parameter for "greater than or equal" [[constraints.Constraint]].
-    * @return the defined [[constraints.Constraint]].
+    * @param that a second parameter for "greater than or equal" [[Constraint]].
+    * @return the defined [[Constraint]].
     */
-  def #>=(that: Rand): crv.Constraint = {
+  def #>=(that: Rand): Constraint = {
     val c = new XgteqY(this, that)
-    model.constr += c
-    new Constraint(c)
+    val crvc = new Constraint(c)
+    model.crvconstr += crvc
+    crvc
   }
 
   /**
-    * Defines "greater than or equal" [[constraints.Constraint]] between [[Rand]] and integer constant.
+    * Defines "greater than or equal" [[Constraint]] between [[Rand]] and integer constant.
     *
-    * @param that a second parameter for "greater than or equal" [[constraints.Constraint]].
-    * @return the equation [[constraints.Constraint]].
+    * @param that a second parameter for "greater than or equal" [[Constraint]].
+    * @return the equation [[Constraint]].
     */
-  def #>=(that: BigInt): crv.Constraint = {
+  def #>=(that: BigInt): Constraint = {
     require(that <= Int.MaxValue)
     val c = new XgteqC(this, that.toInt)
-    model.constr += c
-    new Constraint(c)
+    val crvc = new Constraint(c)
+    model.crvconstr += crvc
+    crvc
   }
 
   /**
-    * Defines [[constraints.Constraint]] on inclusion of a [[Rand]] variable value in a set.
+    * Defines [[Constraint]] on inclusion of a [[Rand]] variable value in a set.
     *
     * @param that set that this variable's value must be included.
-    * @return the equation [[constraints.Constraint]].
+    * @return the equation [[Constraint]].
     */
-  def in(that: SetVar): crv.Constraint = {
+  def in(that: SetVar): Constraint = {
     if (min == max) {
       val c = new EinA(min, that)
-      model.constr += c
-      new Constraint(c)
+      val crvc = new Constraint(c)
+      model.crvconstr += crvc
+      crvc
     } else {
       val c = new XinA(this, that)
-      model.constr += c
-      new Constraint(c)
+      val crvc = new Constraint(c)
+      model.crvconstr += crvc
+      crvc
     }
   }
 
   /**
-    * Defines [[constraints.Constraint]] on inclusion of a [[Rand]] variable value in a set.
+    * Defines [[Constraint]] on inclusion of a [[Rand]] variable value in a set.
     *
     * @param that set that this variable's value must be included.
-    * @return the equation [[constraints.Constraint]].
+    * @return the equation [[Constraint]].
     */
-  def inside(that: SetVar): crv.Constraint = {
+  def inside(that: SetVar): Constraint = {
     this.in(that)
   }
 }

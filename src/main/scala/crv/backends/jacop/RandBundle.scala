@@ -1,20 +1,14 @@
 package crv.backends.jacop
 
+import Chisel.{Bool, SInt}
 import chisel3.stage.{ChiselGeneratorAnnotation, DesignAnnotation}
 import chisel3.{RawModule, UInt}
 import chisel3.stage.phases.Convert
 import org.jacop.core.IntDomain
-import org.jacop.search.{
-  DepthFirstSearch,
-  IndomainRandom,
-  PrintOutListener,
-  SelectChoicePoint,
-  SimpleSelect,
-  SimpleSolutionListener,
-  SolutionListener
-}
+import org.jacop.search.{DepthFirstSearch, IndomainRandom, PrintOutListener, SelectChoicePoint, SimpleSelect, SimpleSolutionListener, SolutionListener}
 
 import scala.collection.mutable
+import scala.math.pow
 
 object RandBundle {
 
@@ -45,6 +39,7 @@ object RandBundle {
   ): Boolean = {
     model.imposeAllConstraints()
     val label = dfs[A]
+
     label.setAssignSolution(true)
     label.setPrintInfo(false)
     addLabel(label)
@@ -61,9 +56,25 @@ object RandBundle {
 
 trait RandBundle extends crv.RandObj {
 
-  implicit def URand(s: String, u: UInt): Rand = {
+  def uRand(s: String, u: UInt): Rand = {
+    require(u.getWidth < 30)
     val name = s"b_$s"
+    val max = pow(2, u.getWidth)
     val x = currentModel.vars.filter(_ != null).find(_.id() == name).getOrElse(new Rand(name, 0, u.getWidth))
+    x.asInstanceOf[Rand]
+  }
+
+  def sRand(s: String, u: SInt): Rand = {
+    require(u.getWidth < 30)
+    val name = s"b_$s"
+    val max = pow(2, u.getWidth - 1)
+    val x = currentModel.vars.filter(_ != null).find(_.id() == name).getOrElse(new Rand(name, -max.toInt, max.toInt))
+    x.asInstanceOf[Rand]
+  }
+
+  def bRand(s: String, u: Bool): Rand = {
+    val name = s"b_$s"
+    val x = currentModel.vars.filter(_ != null).find(_.id() == name).getOrElse(new Rand(name, 0, 1))
     x.asInstanceOf[Rand]
   }
 
@@ -114,10 +125,16 @@ trait RandBundle extends crv.RandObj {
     * @return Boolean the result of the current randomization
     */
   override def randomize: Boolean = {
+    val old = new Model(currentModel.seed)
+    old.vars = currentModel.vars
+    old.crvconstr ++= currentModel.crvconstr
+    old.crvconstr.foreach(x => x.model = old)
+    currentModel = old
     nOfCalls += 1
     if (!initialize) initializeObject()
     resetDomains()
     preRandomize()
+    // TODO: create a better implementation of Randc in order to add constraint to them
     currentModel.randcVars.foreach(_.next())
     val result = RandBundle.satisfySearch(
       new SimpleSelect[Rand](problemVariables.toArray, null, new IndomainRandom[Rand](currentModel.seed + nOfCalls)),

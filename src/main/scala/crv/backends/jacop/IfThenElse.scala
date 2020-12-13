@@ -26,10 +26,11 @@ object IfThenElse {
       thenC.getConstraint.asInstanceOf[PrimitiveConstraint],
       elseC.getConstraint.asInstanceOf[PrimitiveConstraint]
     )
-    model.constr += newConstraint
+    val crvc = new Constraint(newConstraint)
+    model.crvconstr += crvc
     ifC.disable()
     thenC.disable()
     elseC.disable()
-    new Constraint(newConstraint)
+    crvc
   }
 }

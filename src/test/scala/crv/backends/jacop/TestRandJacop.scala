@@ -1,8 +1,7 @@
 package crv.backends.jacop
-import chisel3._
-import chisel3.tester.{testableClock, testableData, ChiselScalatestTester}
-import chisel3.util._
 import org.scalatest.{FlatSpec, Matchers}
+
+import scala.sys.SystemProperties.headless.disable
 
 class TestRandJacop extends FlatSpec with VerificationContext {
 
@@ -156,7 +155,6 @@ class TestRandJacop extends FlatSpec with VerificationContext {
     }
     val myPacket = new Packet
     myPacket.randomize
-    myPacket.debug()
     assert(myPacket.payload(0) <= myPacket.len)
     assert(myPacket.payload(1) <= 3)
   }
@@ -172,7 +170,6 @@ class TestRandJacop extends FlatSpec with VerificationContext {
     }
     val myPacket = new Packet
     assert(myPacket.randomize)
-    myPacket.debug()
     assert(myPacket.payload(0) < myPacket.len)
     assert(myPacket.payload(1) < 3)
   }
@@ -214,10 +211,10 @@ class TestRandJacop extends FlatSpec with VerificationContext {
       val max = 100
       val len = new Rand("len", min, max)
       val payload: Array[Rand] = Array.tabulate(11)(i => new Rand("byte[" + i + "]", min, max))
-      val cgroup: ConstraintGroup = new ConstraintGroup {
-        payload(0) #> len
+      val cgroup: ConstraintGroup = new ConstraintGroup (
+        payload(0) #> len,
         payload(1) #> 98
-      }
+      )
 
       val negc: crv.Constraint = payload(1) #< 98
       negc.disable()
@@ -332,6 +329,5 @@ class TestRandJacop extends FlatSpec with VerificationContext {
 
     val myPacket = new Packet(new Model)
     myPacket.len.setVar(10)
-    println(myPacket.toString)
   }
 }

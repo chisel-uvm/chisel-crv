@@ -16,18 +16,11 @@ object TestBundles {
 
     val x = UInt(8.W)
     val y = UInt(8.W)
-    val c = URand("x", x) #= URand("y", y)
-    val t = URand("x", x) #\= URand("y", y)
-    c.disable()
-
-    override def preRandomize(): Unit = {
-      super.preRandomize()
-      currentModel.vars.filter(_ != null).foreach(x => println(x))
-    }
-    override def postRandomize(): Unit = {
-      super.postRandomize()
-      currentModel.vars.filter(_ != null).foreach(x => println(x))
-    }
+    val a = new Rand(0, 10)
+    val b = new Rand(0, 10)
+    val grethen = a #> b
+    val lessthen = b #< a
+    lessthen.disable()
   }
 
   class myPacket {
@@ -66,18 +59,15 @@ class AluTest extends FlatSpec with ChiselScalatestTester with VerificationConte
 
   it should "test static circuits" in {
     val z = new A()
-    println(z.currentModel.constr)
     val o = z.myRand
-    assert(o.x.litValue() != o.y.litValue())
-    z.c.enable()
-    z.t.disable()
-    println(z.currentModel.constr)
+    assert(z.a > z.b)
+    z.grethen.disable()
+    z.lessthen.enable()
     val k = z.myRand
-    assert(k.x.litValue() == k.y.litValue())
-    z.c.disable()
-    z.t.enable()
-    println(z.currentModel.constr)
+    assert(k.b < k.y.litValue())
+    z.grethen.disable()
+    z.lessthen.enable()
     val t = z.myRand
-    assert(t.x.litValue() != t.y.litValue())
+    assert(t.x.litValue() < t.y.litValue())
   }
 }
