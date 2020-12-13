@@ -1,7 +1,7 @@
 package crv.backends.jacop
 
 import chisel3.stage.{ChiselGeneratorAnnotation, DesignAnnotation}
-import chisel3.{RawModule, UInt}
+import chisel3.{Bool, RawModule, UInt}
 import chisel3.stage.phases.Convert
 import org.jacop.core.IntDomain
 import org.jacop.search.{
@@ -61,9 +61,21 @@ object RandBundle {
 
 trait RandBundle extends crv.RandObj {
 
-  implicit def URand(s: String, u: UInt): Rand = {
+  def URand(s: String, u: UInt): Rand = {
     val name = s"b_$s"
     val x = currentModel.vars.filter(_ != null).find(_.id() == name).getOrElse(new Rand(name, 0, u.getWidth))
+    x.asInstanceOf[Rand]
+  }
+
+  def URand(s: String, u: Bool): Rand = {
+    val name = s"b_$s"
+    val x = currentModel.vars.filter(_ != null).find(_.id() == name).getOrElse(new Rand(name, 0, 1))
+    x.asInstanceOf[Rand]
+  }
+
+  def SRand(s: String, u: Bool): Rand = {
+    val name = s"b_$s"
+    val x = currentModel.vars.filter(_ != null).find(_.id() == name).getOrElse(new Rand(name, -u.getWidth, u.getWidth))
     x.asInstanceOf[Rand]
   }
 
