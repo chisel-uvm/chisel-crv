@@ -90,7 +90,10 @@ trait RandBundle extends crv.RandObj {
     * Restore the domain of all [[Rand]] variable declared in the current [[RandObj]] to their initial values
     */
   private def resetDomains(): Unit = {
-    domainDatabase.foreach(k => k._1.domain.setDomain(k._2))
+    domainDatabase.foreach{k =>
+      k._1.domain.setDomain(k._2)
+      k._1.domain.modelConstraintsToEvaluate = Array.fill[Int](k._1.domain.modelConstraintsToEvaluate.length)(0).toArray
+    }
   }
 
   override def toString: String = {
@@ -125,6 +128,7 @@ trait RandBundle extends crv.RandObj {
     * @return Boolean the result of the current randomization
     */
   override def randomize: Boolean = {
+    currentModel.setLevel(nOfCalls)
     nOfCalls += 1
     if (!initialize) initializeObject()
     resetDomains()

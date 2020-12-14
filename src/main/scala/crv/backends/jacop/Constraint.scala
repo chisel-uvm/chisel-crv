@@ -24,7 +24,6 @@ class Constraint(private val constraint: org.jacop.constraints.Constraint)(impli
     */
   override def enable(): Unit = {
     isEanble = true
-    model.addChanged(constraint)
   }
 
   /**

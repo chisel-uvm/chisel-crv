@@ -16,6 +16,7 @@ class Model(val seed: Int = new Random().nextInt()) extends org.jacop.scala.Mode
 
   override def imposeAllConstraints() {
     this.crvconstr.filter(_.isEanble).foreach(e => this.impose(e.getConstraint))
+    this.numberOfConstraints = 0
   }
 
   def apply(s: String): Rand = {
