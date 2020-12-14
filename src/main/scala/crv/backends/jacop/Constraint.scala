@@ -10,6 +10,7 @@ class Constraint(private val constraint: org.jacop.constraints.Constraint)(impli
 
   override type U = org.jacop.constraints.Constraint
   var isEanble: Boolean = true
+
   /**
     * Disable the current constraint
     */

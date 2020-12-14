@@ -230,7 +230,7 @@ class TestRandJacop extends FlatSpec with VerificationContext {
       val max = 100
       val len = new Rand("len", min, max)
       val payload: Array[Rand] = Array.tabulate(11)(i => new Rand("byte[" + i + "]", min, max))
-      val cgroup: ConstraintGroup = new ConstraintGroup (
+      val cgroup: ConstraintGroup = new ConstraintGroup(
         payload(0) #> len,
         payload(1) #> 98
       )

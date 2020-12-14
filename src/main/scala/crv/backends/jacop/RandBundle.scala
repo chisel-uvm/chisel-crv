@@ -5,7 +5,15 @@ import chisel3.stage.{ChiselGeneratorAnnotation, DesignAnnotation}
 import chisel3.{RawModule, UInt}
 import chisel3.stage.phases.Convert
 import org.jacop.core.IntDomain
-import org.jacop.search.{DepthFirstSearch, IndomainRandom, PrintOutListener, SelectChoicePoint, SimpleSelect, SimpleSolutionListener, SolutionListener}
+import org.jacop.search.{
+  DepthFirstSearch,
+  IndomainRandom,
+  PrintOutListener,
+  SelectChoicePoint,
+  SimpleSelect,
+  SimpleSolutionListener,
+  SolutionListener
+}
 
 import scala.collection.mutable
 import scala.math.pow
@@ -90,7 +98,7 @@ trait RandBundle extends crv.RandObj {
     * Restore the domain of all [[Rand]] variable declared in the current [[RandObj]] to their initial values
     */
   private def resetDomains(): Unit = {
-    domainDatabase.foreach{k =>
+    domainDatabase.foreach { k =>
       k._1.domain.setDomain(k._2)
       k._1.domain.modelConstraintsToEvaluate = Array.fill[Int](k._1.domain.modelConstraintsToEvaluate.length)(0).toArray
     }
