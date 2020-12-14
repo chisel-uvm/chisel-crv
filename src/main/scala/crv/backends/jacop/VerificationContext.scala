@@ -1,15 +1,18 @@
 package crv.backends.jacop
 
+import Chisel.Module
 import chisel3.{dontTouch, fromIntToLiteral, Bundle, Clock, Data, Input, RawModule}
-import crv.backends.jacop.RandBundle.ModuleElaboration
+import crv.backends.jacop.RandObj.ModuleElaboration
 import chisel3.experimental.BundleLiterals.AddBundleLiteralConstructor
 import chisel3.experimental.DataMirror
+
+import scala.reflect.runtime.universe.Tree
 
 trait VerificationContext extends crv.VerificationContext {
 
   implicit class VerifBundle[T <: Bundle](bundle: T) extends Bundle {
     def myRand() = {
-      val bund = bundle.asInstanceOf[RandBundle]
+      val bund = bundle.asInstanceOf[RandObj]
       assert(bund.randomize)
 
       class RandomBundleWrapper extends RawModule {
@@ -19,11 +22,20 @@ trait VerificationContext extends crv.VerificationContext {
       }
 
       val module = ModuleElaboration.elaborate(() => new RandomBundleWrapper)
-      val portNames = DataMirror.fullModulePorts(module).drop(2)
-      val modelBinding = portNames.map(_._1).zipWithIndex.map {
+      val portNames = DataMirror.fullModulePorts(module).drop(1).filter(!_._2.isInstanceOf[Bundle])
+      val modelBinding = portNames.zipWithIndex.map {
         case (name, index) =>
           new Function1[Bundle, (Data, Data)] {
-            def apply(t: Bundle): (Data, Data) = t.getElements(index) -> bund.currentModel(name).value().U
+            def apply(t: Bundle): (Data, Data) = {
+              t.getElements(index) match {
+                case elem: Bundle => elem.getElements(index) -> bund.currentModel(name._1).value().U
+                case _ => {
+                  val p = t.getElements(index)
+                  val o = bund.currentModel(name._1).value().U
+                  t.getElements(index) -> bund.currentModel(name._1).value().U
+                }
+              }
+            }
           }
       }
       val randomBundle = module.b.cloneType.Lit(modelBinding.toSeq: _*)

@@ -1,35 +1,25 @@
 package chisel.bundle.random
 
-import Chisel.{fromIntToWidth, fromtIntToLiteral}
-import chisel.bundle.random.TestBundles.A
+import Chisel.{fromIntToWidth, fromtIntToLiteral, Vec}
+import chisel.bundle.random.TestBundles.T
 import chisel3.tester.ChiselScalatestTester
 import chisel3.{Bundle, Input, Module, Output, UInt, Wire}
 import chisel3.util.{is, switch}
-import crv.backends.jacop.{Model, Rand, RandBundle, VerificationContext}
+import crv.backends.jacop.{Constraint, Model, Rand, RandObj, VerificationContext}
 import org.scalatest.{FlatSpec, Matchers}
 
 object TestBundles {
 
-  class A extends Bundle with RandBundle {
-    val model = new Model(3)
-    currentModel = model
+  class T extends Bundle with RandObj {
 
+    currentModel = new Model(3)
+    val v = Vec(20, UInt(16.W))
     val x = UInt(8.W)
     val y = UInt(8.W)
-    val a = new Rand(0, 10)
-    val b = new Rand(0, 10)
-    val grethen = a #> b
-    val lessthen = a #< b
-    lessthen.disable()
-    override def preRandomize() = {
-      super.preRandomize()
-      model.crvconstr.filter(_.isEanble).foreach(println)
-      println("-------------------------")
-    }
-  }
-
-  class myPacket {
-    val bundle = new A()
+    uRand("v_10", v(10)) #= uRand("x", x)
+    val greaterThen: Constraint = uRand("x", x) #> uRand("y", y)
+    val lessThen:    Constraint = uRand("x", x) #< uRand("y", y)
+    lessThen.disable()
   }
 
   case class K() extends Bundle {
@@ -38,7 +28,7 @@ object TestBundles {
     val b = UInt(1.W)
   }
 }
-class Alu(size: Int) extends Module with RandBundle {
+class Alu(size: Int) extends Module with RandObj {
 
   val io = IO(new Bundle {
     val fn:     UInt = Input(UInt(2.W))
@@ -60,16 +50,47 @@ class Alu(size: Int) extends Module with RandBundle {
 }
 
 class AluTest extends FlatSpec with ChiselScalatestTester with VerificationContext with Matchers {
-  behavior.of("ALU")
+  behavior.of("Random Bundles")
 
-  it should "test static circuits" in {
+  class A extends Bundle with RandObj {
+    currentModel = new Model(3)
+
+    val x = UInt(8.W)
+    val y = UInt(8.W)
+    val greaterThen: Constraint = x #> y
+    val lessThen:    Constraint = x #< y
+    class B extends Bundle with RandObj {
+      val x = UInt(8.W)
+    }
+    val b = new B()
+    b.currentModel = currentModel
+    val newC: Constraint = x #= b.x
+    lessThen.disable()
+  }
+
+  it should "Randomize Nested Bundles " in {
+    // This is just a POC is not currently working !!!!!
     val z = new A()
-    assert(z.randomize)
-    assert(z.a > z.b)
-    z.grethen.disable()
-    z.lessthen.enable()
+    val o = z.myRand()
+    assert(o.x.litValue() > o.y.litValue())
+    assert(o.x.litValue() == o.b.x.litValue())
+    z.greaterThen.disable()
+    z.lessThen.enable()
+    val t = z.myRand()
+    assert(t.x.litValue() < t.y.litValue())
+    assert(t.x.litValue() == t.b.x.litValue())
+  }
 
-    assert(z.randomize)
-    assert(z.a < z.b)
+  ignore should "Randomize Bundles with Vectors " in {
+    // This is just a POC is not currently working !!!!!
+    val z = new T()
+    val o = z.myRand()
+    assert(o.x.litValue() > o.y.litValue())
+    assert(o.x.litValue() == o.v(10).litValue())
+    z.greaterThen.disable()
+    z.lessThen.enable()
+    val t = z.myRand()
+    assert(t.x.litValue() < t.y.litValue())
+    assert(t.x.litValue() == t.v(10).litValue())
   }
 }

@@ -1,5 +1,9 @@
 package crv.backends.jacop
 
+import Chisel.{Bool, Bundle, SInt}
+import chisel3.stage.{ChiselGeneratorAnnotation, DesignAnnotation}
+import chisel3.{RawModule, UInt}
+import chisel3.stage.phases.Convert
 import org.jacop.core.IntDomain
 import org.jacop.search.{
   DepthFirstSearch,
@@ -12,10 +16,24 @@ import org.jacop.search.{
 }
 
 import scala.collection.mutable
+import scala.math.pow
+import scala.reflect.runtime.universe
+import scala.reflect.runtime.universe.{runtimeMirror, typeOf}
 
 object RandObj {
 
   private val addLabelFun = new ThreadLocal[mutable.Buffer[DepthFirstSearch[_ <: org.jacop.core.Var]]]
+
+  object ModuleElaboration {
+    private val converter = new Convert
+
+    def elaborate[M <: RawModule](gen: () => M): M = {
+      val genAnno = ChiselGeneratorAnnotation(gen)
+      val elaborationAnnos = genAnno.elaborate
+      val dut = elaborationAnnos.collectFirst { case DesignAnnotation(d) => d }.get
+      dut.asInstanceOf[M]
+    }
+  }
 
   private def dfs[A <: Rand]: DepthFirstSearch[A] = {
     val label = new DepthFirstSearch[A]
@@ -31,6 +49,7 @@ object RandObj {
   ): Boolean = {
     model.imposeAllConstraints()
     val label = dfs[A]
+
     label.setAssignSolution(true)
     label.setPrintInfo(false)
     addLabel(label)
@@ -45,7 +64,49 @@ object RandObj {
   }
 }
 
-class RandObj extends crv.RandObj {
+trait RandObj extends crv.RandObj {
+  private val rm = runtimeMirror(getClass.getClassLoader)
+  private val im = rm.reflect(this)
+  private val members = im.symbol.typeSignature.members
+  private def bundles: Iterable[universe.Symbol] = members.filter(_.typeSignature <:< typeOf[Bundle])
+  private def uints: Iterable[universe.Symbol] = {
+    members.filter(_.typeSignature <:< typeOf[UInt])
+  }
+  private def bools: Iterable[universe.Symbol] = members.filter(_.typeSignature <:< typeOf[Bool])
+  private def sints: Iterable[universe.Symbol] = members.filter(_.typeSignature <:< typeOf[SInt])
+
+  implicit def uIntToRand(u: UInt): Rand = {
+    val name = "b_" + im
+      .reflectField(uints.filter(x => im.reflectField(x.asTerm).get.asInstanceOf[UInt] == u).head.asTerm)
+      .symbol
+      .toString
+      .replace("value ", "")
+    val max = pow(2, u.getWidth)
+    val x = currentModel.vars.filter(_ != null).find(_.id() == name).getOrElse(new Rand(name, 0, max.toInt))
+    x.asInstanceOf[Rand]
+  }
+
+  def uRand(s: String, u: UInt): Rand = {
+    require(u.getWidth < 30)
+    val name = s"b_$s"
+    val max = pow(2, u.getWidth)
+    val x = currentModel.vars.filter(_ != null).find(_.id() == name).getOrElse(new Rand(name, 0, max.toInt))
+    x.asInstanceOf[Rand]
+  }
+
+  def sRand(s: String, u: SInt): Rand = {
+    require(u.getWidth < 30)
+    val name = s"b_$s"
+    val max = pow(2, u.getWidth - 1)
+    val x = currentModel.vars.filter(_ != null).find(_.id() == name).getOrElse(new Rand(name, -max.toInt, max.toInt))
+    x.asInstanceOf[Rand]
+  }
+
+  def bRand(s: String, u: Bool): Rand = {
+    val name = s"b_$s"
+    val x = currentModel.vars.filter(_ != null).find(_.id() == name).getOrElse(new Rand(name, 0, 1))
+    x.asInstanceOf[Rand]
+  }
 
   implicit var currentModel: Model = new Model()
   private var nOfCalls = 0
@@ -96,10 +157,12 @@ class RandObj extends crv.RandObj {
     * @return Boolean the result of the current randomization
     */
   override def randomize: Boolean = {
+    currentModel.setLevel(nOfCalls)
     nOfCalls += 1
     if (!initialize) initializeObject()
     resetDomains()
     preRandomize()
+    // TODO: create a better implementation of Randc in order to add constraint to them
     currentModel.randcVars.foreach(_.next())
     val result = RandObj.satisfySearch(
       new SimpleSelect[Rand](problemVariables.toArray, null, new IndomainRandom[Rand](currentModel.seed + nOfCalls)),
