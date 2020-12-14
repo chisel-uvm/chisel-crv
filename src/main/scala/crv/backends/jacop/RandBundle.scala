@@ -86,7 +86,6 @@ trait RandBundle extends crv.RandObj {
     x.asInstanceOf[Rand]
   }
 
-  // We need a reference to the Parent RandomObj in order to enable or disable a constraint
   implicit var currentModel: Model = new Model()
   private var nOfCalls = 0
   private val listener = new SimpleSolutionListener[Rand]

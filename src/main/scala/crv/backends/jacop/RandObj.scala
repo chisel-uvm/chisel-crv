@@ -45,10 +45,9 @@ object RandObj {
   }
 }
 
-class RandObj(val _model: Model) extends crv.RandObj {
+class RandObj extends crv.RandObj {
 
-  // We need a reference to the Parent RandomObj in order to enable or disable a constraint
-  implicit val currentModel: Model = _model
+  implicit var currentModel: Model = new Model()
   private var nOfCalls = 0
   private val listener = new SimpleSolutionListener[Rand]
   private val domainDatabase = mutable.Map[Rand, IntDomain]()
@@ -59,15 +58,18 @@ class RandObj(val _model: Model) extends crv.RandObj {
     * Restore the domain of all [[Rand]] variable declared in the current [[RandObj]] to their initial values
     */
   private def resetDomains(): Unit = {
-    domainDatabase.foreach(k => k._1.setDomain(k._2))
+    domainDatabase.foreach { k =>
+      k._1.domain.setDomain(k._2)
+      k._1.domain.modelConstraintsToEvaluate = Array.fill[Int](k._1.domain.modelConstraintsToEvaluate.length)(0).toArray
+    }
   }
 
   override def toString: String = {
     val buffer = new StringBuilder()
-    for (i <- Range(0, _model.n)) {
-      buffer ++= _model.vars(i).toString + ", "
+    for (i <- Range(0, currentModel.n)) {
+      buffer ++= currentModel.vars(i).toString + ", "
     }
-    buffer + _model.randcVars.mkString(", ")
+    buffer + currentModel.randcVars.mkString(", ")
   }
 
   /**
@@ -84,7 +86,7 @@ class RandObj(val _model: Model) extends crv.RandObj {
     */
   private def initializeObject(): Unit = {
     initialize = true
-    problemVariables = _model.vars.filter(x => x.isInstanceOf[Rand]).map(_.asInstanceOf[Rand]).toList
+    problemVariables = currentModel.vars.filter(x => x.isInstanceOf[Rand]).map(_.asInstanceOf[Rand]).toList
     problemVariables.foreach(x => domainDatabase += (x -> x.domain.cloneLight()))
   }
 
@@ -98,11 +100,11 @@ class RandObj(val _model: Model) extends crv.RandObj {
     if (!initialize) initializeObject()
     resetDomains()
     preRandomize()
-    _model.randcVars.foreach(_.next())
+    currentModel.randcVars.foreach(_.next())
     val result = RandObj.satisfySearch(
-      new SimpleSelect[Rand](problemVariables.toArray, null, new IndomainRandom[Rand](_model.seed + nOfCalls)),
+      new SimpleSelect[Rand](problemVariables.toArray, null, new IndomainRandom[Rand](currentModel.seed + nOfCalls)),
       listener,
-      _model
+      currentModel
     )
     postRandomize()
     result

@@ -6,7 +6,9 @@ import scala.sys.SystemProperties.headless.disable
 class TestRandJacop extends FlatSpec with VerificationContext {
 
   it should "be able to declare a random variable and and a constraint" in {
-    class Packet extends RandObj(new Model) {
+    class Packet extends RandObj {
+      currentModel = new Model(3)
+
       val min = 1
       val max = 100
       var size = new Rand("size", min, max)
@@ -51,26 +53,28 @@ class TestRandJacop extends FlatSpec with VerificationContext {
   }
 
   it should "be able to enable disable constraint 2" in {
-    class Packet extends RandObj(new Model) {
+    class Packet extends RandObj {
+      currentModel = new Model(3)
       val min = 1
       val max = 100
       val size = new Rand("size", min, max)
       val len = new Rand("len", min, max)
-      val grather = size #> len
-      // val smaller = size #< len
+      val grather: Constraint = size #> len
+      val smaller: Constraint = size #< len
     }
     val myPacket = new Packet
     myPacket.grather.disable()
     assert(myPacket.randomize)
     assert(myPacket.size < myPacket.len)
-    //myPacket.smaller.disable()
+    myPacket.smaller.disable()
     myPacket.grather.enable()
     assert(myPacket.randomize)
     assert(myPacket.size > myPacket.len)
   }
 
   it should "be able to subtract two Rand var" in {
-    class Packet extends RandObj(new Model) {
+    class Packet extends RandObj {
+      currentModel = new Model(3)
       val min = 1
       val max = 100
       val size = new Rand("size", min, max)
@@ -84,7 +88,8 @@ class TestRandJacop extends FlatSpec with VerificationContext {
   }
 
   it should "be able to add two Rand var" in {
-    class Packet extends RandObj(new Model) {
+    class Packet extends RandObj {
+      currentModel = new Model(3)
       val min = 1
       val max = 100
       val size = new Rand("size", min, max)
@@ -100,7 +105,8 @@ class TestRandJacop extends FlatSpec with VerificationContext {
   }
 
   it should "be able to divide two Rand var" in {
-    class Packet extends RandObj(new Model) {
+    class Packet extends RandObj {
+      currentModel = new Model(3)
       val min = 1
       val max = 100
       val size = new Rand("size", min, max)
@@ -116,7 +122,8 @@ class TestRandJacop extends FlatSpec with VerificationContext {
   }
 
   it should "be able to multiply two Rand var" in {
-    class Packet extends RandObj(new Model) {
+    class Packet extends RandObj {
+      currentModel = new Model(5)
       val min = 1
       val max = 100
       val size = new Rand("size", min, max)
@@ -132,7 +139,8 @@ class TestRandJacop extends FlatSpec with VerificationContext {
   }
 
   it should "be able to constraint the reminder of Rand var" in {
-    class Packet extends RandObj(new Model) {
+    class Packet extends RandObj {
+      currentModel = new Model(6)
       val min = 1
       val max = 100
       val size = new Rand("size", min, max)
@@ -148,7 +156,8 @@ class TestRandJacop extends FlatSpec with VerificationContext {
   }
 
   it should "be able to constraint the exponential of Rand var" in {
-    class Packet extends RandObj(new Model) {
+    class Packet extends RandObj {
+      currentModel = new Model(6)
       val min = 1
       val max = 100
       val size = new Rand("size", 2, 3)
@@ -164,7 +173,8 @@ class TestRandJacop extends FlatSpec with VerificationContext {
   }
 
   it should "be able to constraint less or equal then  Rand var" in {
-    class Packet extends RandObj(new Model) {
+    class Packet extends RandObj {
+      currentModel = new Model(6)
       val min = 1
       val max = 100
       val len = new Rand("len", min, max)
@@ -179,7 +189,8 @@ class TestRandJacop extends FlatSpec with VerificationContext {
   }
 
   it should "be able to constraint less then  Rand var" in {
-    class Packet extends RandObj(new Model) {
+    class Packet extends RandObj {
+      currentModel = new Model(6)
       val min = 1
       val max = 100
       val len = new Rand("len", min, max)
@@ -194,7 +205,8 @@ class TestRandJacop extends FlatSpec with VerificationContext {
   }
 
   it should "be able to constraint gather or equal than of Rand var" in {
-    class Packet extends RandObj(new Model) {
+    class Packet extends RandObj {
+      currentModel = new Model(6)
       val min = 1
       val max = 10
       val len = new Rand("len", min, max)
@@ -209,7 +221,8 @@ class TestRandJacop extends FlatSpec with VerificationContext {
   }
 
   it should "be able to constraint gather than of Rand var" in {
-    class Packet extends RandObj(new Model) {
+    class Packet extends RandObj {
+      currentModel = new Model(6)
       val min = 1
       val max = 100
       val len = new Rand("len", min, max)
@@ -225,7 +238,8 @@ class TestRandJacop extends FlatSpec with VerificationContext {
 
   it should "be able to add Constraint Groups" in {
 
-    class Packet extends RandObj(new Model) {
+    class Packet extends RandObj {
+      currentModel = new Model(6)
       val min = 1
       val max = 100
       val len = new Rand("len", min, max)
@@ -252,7 +266,8 @@ class TestRandJacop extends FlatSpec with VerificationContext {
 
   it should "be possible to add Randc variables" in {
 
-    class Packet extends RandObj(new Model) {
+    class Packet extends RandObj {
+      currentModel = new Model(6)
       val min = 1
       val max = 100
       val len = new Rand("len", min, max)
@@ -275,12 +290,14 @@ class TestRandJacop extends FlatSpec with VerificationContext {
   }
 
   it should "be able to declare nested random classes" in {
-    class Packet1(model: Model) extends RandObj(model) {
+    class Packet1(model: Model) extends RandObj {
+      currentModel = model
       override def toString: String = "Packet1"
       val len:               Rand = new Rand(10, 100)
     }
 
-    class Packet2(model: Model) extends RandObj(model) {
+    class Packet2(model: Model) extends RandObj {
+      currentModel = model
       override def toString: String = "Packet2"
       val nestedPacket = new Packet1(model)
       val size = new Rand(10, 100)
@@ -288,13 +305,14 @@ class TestRandJacop extends FlatSpec with VerificationContext {
     }
 
     val myPaket = new Packet2(new Model)
-    assert(myPaket._model.id == myPaket.nestedPacket._model.id)
+    assert(myPaket.currentModel.id == myPaket.nestedPacket.currentModel.id)
     assert(myPaket.randomize)
     assert(myPaket.size.value() == myPaket.nestedPacket.len.value())
   }
 
   it should "be able to declare conditional constraint" in {
-    class Packet(model: Model) extends RandObj(model) {
+    class Packet(model: Model) extends RandObj {
+      currentModel = new Model(3)
       override def toString: String = "Packet1"
       val len:               Rand = new Rand(1, 3)
       val c:                 Rand = new Rand(1, 100)
@@ -324,7 +342,8 @@ class TestRandJacop extends FlatSpec with VerificationContext {
   }
 
   it should "be able to declare ifThenElse constraint" in {
-    class Packet(model: Model) extends RandObj(model) {
+    class Packet(model: Model) extends RandObj {
+      currentModel = new Model(5)
       override def toString: String = "Packet1"
       val len:               Rand = new Rand(1, 3)
       val c:                 Rand = new Rand(1, 100)
@@ -342,7 +361,8 @@ class TestRandJacop extends FlatSpec with VerificationContext {
   }
 
   it should "be possible to assign a value to a random variable" in {
-    class Packet(model: Model) extends RandObj(model) {
+    class Packet(model: Model) extends RandObj {
+      currentModel = new Model(7)
       val len: Rand = new Rand(1, 3)
     }
 
