@@ -63,26 +63,46 @@ object RandObj {
     if (b != null) b += label
   }
 }
+trait RandBundle extends RandObj {
 
-trait RandObj extends crv.RandObj {
   private val rm = runtimeMirror(getClass.getClassLoader)
   private val im = rm.reflect(this)
   private val members = im.symbol.typeSignature.members
-  private def bundles: Iterable[universe.Symbol] = members.filter(_.typeSignature <:< typeOf[Bundle])
-  private def uints: Iterable[universe.Symbol] = {
-    members.filter(_.typeSignature <:< typeOf[UInt])
-  }
+  private def uints: Iterable[universe.Symbol] = members.filter(_.typeSignature <:< typeOf[UInt])
   private def bools: Iterable[universe.Symbol] = members.filter(_.typeSignature <:< typeOf[Bool])
   private def sints: Iterable[universe.Symbol] = members.filter(_.typeSignature <:< typeOf[SInt])
 
   implicit def uIntToRand(u: UInt): Rand = {
+    require(u.getWidth < 30)
     val name = "b_" + im
       .reflectField(uints.filter(x => im.reflectField(x.asTerm).get.asInstanceOf[UInt] == u).head.asTerm)
       .symbol
       .toString
-      .replace("value ", "")
+      .drop(6) // drop the string "value "
     val max = pow(2, u.getWidth)
     val x = currentModel.vars.filter(_ != null).find(_.id() == name).getOrElse(new Rand(name, 0, max.toInt))
+    x.asInstanceOf[Rand]
+  }
+
+  implicit def sIntToRand(s: SInt): Rand = {
+    require(s.getWidth < 30)
+    val name = "b_" + im
+      .reflectField(sints.filter(x => im.reflectField(x.asTerm).get.asInstanceOf[SInt] == s).head.asTerm)
+      .symbol
+      .toString
+      .drop(6)
+    val max = pow(2, s.getWidth)
+    val x = currentModel.vars.filter(_ != null).find(_.id() == name).getOrElse(new Rand(name, -max.toInt, max.toInt))
+    x.asInstanceOf[Rand]
+  }
+
+  implicit def boolToRand(b: Bool): Rand = {
+    val name = "b_" + im
+      .reflectField(bools.filter(x => im.reflectField(x.asTerm).get.asInstanceOf[Bool] == b).head.asTerm)
+      .symbol
+      .toString
+      .drop(6)
+    val x = currentModel.vars.filter(_ != null).find(_.id() == name).getOrElse(new Rand(name, 0, 1))
     x.asInstanceOf[Rand]
   }
 
@@ -107,6 +127,9 @@ trait RandObj extends crv.RandObj {
     val x = currentModel.vars.filter(_ != null).find(_.id() == name).getOrElse(new Rand(name, 0, 1))
     x.asInstanceOf[Rand]
   }
+}
+
+trait RandObj extends crv.RandObj {
 
   implicit var currentModel: Model = new Model()
   private var nOfCalls = 0
