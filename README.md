@@ -96,7 +96,7 @@ By default, constraints and constraints groups are enabled when they are declare
 
 
 The list of operator used to construct constraint is the following:
-`#<`, `#<=`, `#>`, `#>=`,`#=`, `div`, `*`, `mod`, `+`, `-`, `#\=`, `^`, `in`, `inside`
+`#<`, `#<=`, `#>`, `#>=`,`#=`, `div`, `#*`, `mod`, `#+`, `-`, `#\=`, `#^`, `in`, `inside`
 
 It is also possible to declare conditional constraints with constructors like `IfThen` and `IfThenElse`.
 ```scala

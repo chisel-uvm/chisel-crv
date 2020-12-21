@@ -1,7 +1,7 @@
 lazy val commonSettings = Seq(
   name := "chisel-crv",
   organization := "chisel-uvm",
-  version := "0.2.4",
+  version := "0.2.5",
   scalaVersion := "2.12.10",
   scalacOptions ++= Seq("-deprecation", "-feature", "-unchecked", "-language:reflectiveCalls"),
 

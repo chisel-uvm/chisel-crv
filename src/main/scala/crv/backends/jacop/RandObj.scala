@@ -4,6 +4,7 @@ import Chisel.{Bool, Bundle, SInt}
 import chisel3.stage.{ChiselGeneratorAnnotation, DesignAnnotation}
 import chisel3.{RawModule, UInt}
 import chisel3.stage.phases.Convert
+import crv.backends.jacop.RandObj.CRVException
 import org.jacop.core.IntDomain
 import org.jacop.search.{
   DepthFirstSearch,
@@ -19,8 +20,11 @@ import scala.collection.mutable
 import scala.math.pow
 import scala.reflect.runtime.universe
 import scala.reflect.runtime.universe.{runtimeMirror, typeOf}
+import scala.util.Random
 
 object RandObj {
+  final case class CRVException(private val message: String = "", private val cause: Throwable = None.orNull)
+      extends Exception(message, cause)
 
   private val addLabelFun = new ThreadLocal[mutable.Buffer[DepthFirstSearch[_ <: org.jacop.core.Var]]]
 
@@ -68,14 +72,15 @@ trait RandBundle extends RandObj {
   private val rm = runtimeMirror(getClass.getClassLoader)
   private val im = rm.reflect(this)
   private val members = im.symbol.typeSignature.members
-  private def uints: Iterable[universe.Symbol] = members.filter(_.typeSignature <:< typeOf[UInt])
-  private def bools: Iterable[universe.Symbol] = members.filter(_.typeSignature <:< typeOf[Bool])
-  private def sints: Iterable[universe.Symbol] = members.filter(_.typeSignature <:< typeOf[SInt])
+  private def uints: Iterable[universe.Symbol] = members.filter(_.typeSignature.resultType <:< typeOf[UInt])
+  private def bools: Iterable[universe.Symbol] = members.filter(_.typeSignature.resultType <:< typeOf[Bool])
+  private def sints: Iterable[universe.Symbol] = members.filter(_.typeSignature.resultType <:< typeOf[SInt])
 
   implicit def uIntToRand(u: UInt): Rand = {
     require(u.getWidth < 30)
+    val filtered = uints.filter(!_.isMacro).filter(!_.name.toString.contains("do_as"))
     val name = "b_" + im
-      .reflectField(uints.filter(x => im.reflectField(x.asTerm).get.asInstanceOf[UInt] == u).head.asTerm)
+      .reflectField(filtered.filter(x => im.reflectField(x.asTerm).get.asInstanceOf[UInt] == u).head.asTerm)
       .symbol
       .toString
       .drop(6) // drop the string "value "
@@ -106,24 +111,36 @@ trait RandBundle extends RandObj {
     x.asInstanceOf[Rand]
   }
 
-  def uRand(s: String, u: UInt): Rand = {
+  def uRand(u: UInt): Rand = {
     require(u.getWidth < 30)
-    val name = s"b_$s"
+    val name = "b_" + im
+      .reflectField(bools.filter(x => im.reflectField(x.asTerm).get.asInstanceOf[Bool] == u).head.asTerm)
+      .symbol
+      .toString
+      .drop(6)
     val max = pow(2, u.getWidth)
     val x = currentModel.vars.filter(_ != null).find(_.id() == name).getOrElse(new Rand(name, 0, max.toInt))
     x.asInstanceOf[Rand]
   }
 
-  def sRand(s: String, u: SInt): Rand = {
+  def sRand(u: SInt): Rand = {
     require(u.getWidth < 30)
-    val name = s"b_$s"
+    val name = "b_" + im
+      .reflectField(bools.filter(x => im.reflectField(x.asTerm).get.asInstanceOf[Bool] == u).head.asTerm)
+      .symbol
+      .toString
+      .drop(6)
     val max = pow(2, u.getWidth - 1)
     val x = currentModel.vars.filter(_ != null).find(_.id() == name).getOrElse(new Rand(name, -max.toInt, max.toInt))
     x.asInstanceOf[Rand]
   }
 
-  def bRand(s: String, u: Bool): Rand = {
-    val name = s"b_$s"
+  def bRand(u: Bool): Rand = {
+    val name = "b_" + im
+      .reflectField(bools.filter(x => im.reflectField(x.asTerm).get.asInstanceOf[Bool] == u).head.asTerm)
+      .symbol
+      .toString
+      .drop(6)
     val x = currentModel.vars.filter(_ != null).find(_.id() == name).getOrElse(new Rand(name, 0, 1))
     x.asInstanceOf[Rand]
   }
@@ -183,12 +200,19 @@ trait RandObj extends crv.RandObj {
     currentModel.setLevel(nOfCalls)
     nOfCalls += 1
     if (!initialize) initializeObject()
+
+    if (problemVariables.isEmpty) throw CRVException("Class doesn't have any random field")
+
     resetDomains()
     preRandomize()
     // TODO: create a better implementation of Randc in order to add constraint to them
     currentModel.randcVars.foreach(_.next())
     val result = RandObj.satisfySearch(
-      new SimpleSelect[Rand](problemVariables.toArray, null, new IndomainRandom[Rand](currentModel.seed + nOfCalls)),
+      new SimpleSelect[Rand](
+        problemVariables.toArray,
+        null,
+        new IndomainRandom[Rand](new Random(currentModel.seed + nOfCalls).nextInt())
+      ),
       listener,
       currentModel
     )

@@ -1,7 +1,4 @@
 package crv.backends.jacop
-
-import org.jacop.scala.trace
-
 import scala.collection.mutable.ListBuffer
 import scala.util.Random
 
@@ -15,8 +12,9 @@ class Model(val seed: Int = new Random().nextInt()) extends org.jacop.scala.Mode
   val randcVars = new ListBuffer[Randc]
 
   override def imposeAllConstraints() {
-    this.crvconstr.filter(_.isEanble).foreach(e => this.impose(e.getConstraint))
+    // Reset number of constraints
     this.numberOfConstraints = 0
+    this.crvconstr.filter(_.isEanble).foreach(e => this.impose(e.getConstraint))
   }
 
   def apply(s: String): Rand = {
