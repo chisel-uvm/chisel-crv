@@ -1,26 +1,23 @@
 package crv.backends.jacop
 
-import chisel3.{dontTouch, fromIntToLiteral, Bundle, Clock, Data, Input, RawModule}
-import crv.backends.jacop.RandObj.{CRVException, ModuleElaboration}
+import chisel3.{chiselTypeOf, dontTouch, fromIntToLiteral, Bundle, Clock, Data, Input, RawModule}
+import crv.backends.jacop.RandObj.CRVException
 import chisel3.experimental.BundleLiterals.AddBundleLiteralConstructor
 import chisel3.experimental.DataMirror
+import crv.backends.jacop.experimental.RandBundle
+import crv.backends.jacop.experimental.RandBundle.ModuleElaboration
 
-trait VerificationContext extends crv.VerificationContext {
-
+package object backendsjacop {
   class RawModuleWrapper[T <: Bundle](bundle: T) extends RawModule {
     val clock = IO(Input(Clock()))
     val b = IO(Input(bundle.cloneType))
     dontTouch(b)
   }
 
-  implicit class RandomBundleWrapper[T <: Bundle](bundle: T) extends Bundle {
+  implicit class RandomBundleWrapper[T <: Bundle with RandBundle](bundle: T) extends Bundle {
     def randomBundle() = {
-      if (!bundle.isInstanceOf[RandBundle])
-        throw CRVException("ERROR: current bundle is not an instance fo RandomBundle")
 
-      val bund = bundle.asInstanceOf[RandBundle]
-
-      if (!bund.randomize) throw CRVException("ERROR: Chisel-crv couldn't randomize the bundle")
+      if (!bundle.randomize) throw CRVException("ERROR: Chisel-crv couldn't randomize the bundle")
 
       val module = ModuleElaboration.elaborate(() => new RawModuleWrapper[T](bundle))
       val portNames = DataMirror.fullModulePorts(module).drop(1).filter(!_._2.isInstanceOf[Bundle])
@@ -28,11 +25,25 @@ trait VerificationContext extends crv.VerificationContext {
         case (name, index) =>
           new Function1[Bundle, (Data, Data)] {
             def apply(t: Bundle): (Data, Data) = {
-              t.getElements(index) -> bund.currentModel(name._1).value().U
+              t.getElements(index) -> bundle.currentModel(name._1).value().U
             }
           }
       }
-      module.b.cloneType.Lit(modelBinding: _*)
+      chiselTypeOf(module.b).Lit(modelBinding: _*)
+    }
+  }
+
+  implicit class IntegerConverter(i: Int)(implicit model: Model) {
+    def R(): Rand = {
+      new Rand(i, i)
+    }
+  }
+
+  implicit class BigIntegerConverter(i: BigInt)(implicit model: Model) {
+    require(i < Int.MaxValue)
+    require(i > Int.MinValue)
+    def R(): Rand = {
+      new Rand(i.toInt, i.toInt)
     }
   }
 
@@ -42,6 +53,16 @@ trait VerificationContext extends crv.VerificationContext {
     * @param i integer to be converted.
     */
   implicit def BigIntToRand(i: BigInt)(implicit model: Model): Rand = {
+    require(i < Int.MaxValue)
+    new Rand(i.toInt, i.toInt)
+  }
+
+  /**
+    * Converts a BigInt to [[Rand]].
+    *
+    * @param i integer to be converted.
+    */
+  implicit def IntToRand(i: Int)(implicit model: Model): Rand = {
     require(i < Int.MaxValue)
     new Rand(i.toInt, i.toInt)
   }

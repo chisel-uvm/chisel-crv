@@ -2,8 +2,9 @@ package crv.backends.jacop
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.sys.SystemProperties.headless.disable
+import crv.backends.jacop.backendsjacop._
 
-class TestRandJacop extends FlatSpec with VerificationContext {
+class TestRandJacop extends FlatSpec with Matchers {
 
   it should "be able to declare a random variable and and a constraint" in {
     class Packet extends RandObj {
@@ -15,7 +16,7 @@ class TestRandJacop extends FlatSpec with VerificationContext {
       var len = new Rand("len", min, max)
       len #>= size
       val x:       crv.Constraint = len #<= size
-      val y:       crv.Constraint = len #> 4
+      val y:       crv.Constraint = len #> 4.R
       val payload: Array[Rand] = Array.tabulate(11)(i => new Rand("byte[" + i + "]", 1, 100))
       payload(0) #= (len #+ size)
     }
@@ -96,7 +97,7 @@ class TestRandJacop extends FlatSpec with VerificationContext {
       val len = new Rand("len", min, max)
       val payload: Array[Rand] = Array.tabulate(11)(i => new Rand("byte[" + i + "]", 1, 100))
       payload(0) #= (len #+ size)
-      payload(1) #= (len #+ 4)
+      payload(1) #= (len #+ 4.R)
     }
     val myPacket = new Packet
     assert(myPacket.randomize)
@@ -113,7 +114,7 @@ class TestRandJacop extends FlatSpec with VerificationContext {
       val len = new Rand("len", min, max)
       val payload: Array[Rand] = Array.tabulate(11)(i => new Rand("byte[" + i + "]", 1, 100))
       payload(0) #= len.div(size)
-      payload(1) #= len.div(4)
+      payload(1) #= len.div(4.R)
     }
     val myPacket = new Packet
     assert(myPacket.randomize)
@@ -130,7 +131,7 @@ class TestRandJacop extends FlatSpec with VerificationContext {
       val len = new Rand("len", min, max)
       val payload: Array[Rand] = Array.tabulate(11)(i => new Rand("byte[" + i + "]", 1, 100))
       payload(0) #= (len #* size)
-      payload(1) #= (len #* 4)
+      payload(1) #= (len #* 4.R)
     }
     val myPacket = new Packet
     assert(myPacket.randomize)
@@ -147,7 +148,7 @@ class TestRandJacop extends FlatSpec with VerificationContext {
       val len = new Rand("len", min, max)
       val payload: Array[Rand] = Array.tabulate(11)(i => new Rand("byte[" + i + "]", 1, 100))
       payload(0) #= len.mod(size)
-      payload(1) #= len.mod(4)
+      payload(1) #= len.mod(4.R)
     }
     val myPacket = new Packet
     assert(myPacket.randomize)
@@ -164,7 +165,7 @@ class TestRandJacop extends FlatSpec with VerificationContext {
       val len = new Rand("len", min, max)
       val payload: Array[Rand] = Array.tabulate(11)(i => new Rand("byte[" + i + "]", 1, 100))
       payload(0) #= (len #^ size)
-      payload(1) #= (len #^ 3)
+      payload(1) #= (len #^ 3.R)
     }
     val myPacket = new Packet
     assert(myPacket.randomize)
@@ -180,7 +181,7 @@ class TestRandJacop extends FlatSpec with VerificationContext {
       val len = new Rand("len", min, max)
       val payload: Array[Rand] = Array.tabulate(11)(i => new Rand("byte[" + i + "]", 1, 100))
       payload(0) #<= len
-      payload(1) #<= 3
+      payload(1) #<= 3.R
     }
     val myPacket = new Packet
     myPacket.randomize
@@ -196,7 +197,7 @@ class TestRandJacop extends FlatSpec with VerificationContext {
       val len = new Rand("len", min, max)
       val payload: Array[Rand] = Array.tabulate(11)(i => new Rand("byte[" + i + "]", 1, 100))
       payload(0) #< len
-      payload(1) #< 3
+      payload(1) #< 3.R
     }
     val myPacket = new Packet
     assert(myPacket.randomize)
@@ -212,7 +213,7 @@ class TestRandJacop extends FlatSpec with VerificationContext {
       val len = new Rand("len", min, max)
       val payload: Array[Rand] = Array.tabulate(11)(i => new Rand("byte[" + i + "]", 1, 10))
       payload(0) #>= len
-      payload(1) #>= 3
+      payload(1) #>= 3.R
     }
     val myPacket = new Packet
     myPacket.randomize
@@ -228,7 +229,7 @@ class TestRandJacop extends FlatSpec with VerificationContext {
       val len = new Rand("len", min, max)
       val payload: Array[Rand] = Array.tabulate(11)(i => new Rand("byte[" + i + "]", 1, 100))
       payload(0) #> len
-      payload(1) #> 3
+      payload(1) #> 3.R
     }
     val myPacket = new Packet
     myPacket.randomize
@@ -246,10 +247,10 @@ class TestRandJacop extends FlatSpec with VerificationContext {
       val payload: Array[Rand] = Array.tabulate(11)(i => new Rand("byte[" + i + "]", min, max))
       val cgroup: ConstraintGroup = new ConstraintGroup(
         payload(0) #> len,
-        payload(1) #> 98
+        payload(1) #> 98.R
       )
 
-      val negc: crv.Constraint = payload(1) #< 98
+      val negc: crv.Constraint = payload(1) #< 98.R
       negc.disable()
     }
 
@@ -275,9 +276,9 @@ class TestRandJacop extends FlatSpec with VerificationContext {
       val payload: Array[Rand] = Array.tabulate(11)(i => new Rand("byte[" + i + "]", min, max))
 
       payload(0) #> len
-      payload(1) #> 98
+      payload(1) #> 98.R
 
-      val negc: crv.Constraint = payload(1) #< 98
+      val negc: crv.Constraint = payload(1) #< 98.R
       negc.disable()
     }
 
@@ -317,16 +318,16 @@ class TestRandJacop extends FlatSpec with VerificationContext {
       val len:               Rand = new Rand(1, 3)
       val c:                 Rand = new Rand(1, 100)
 
-      IfThen(len #= 1) {
-        c #= 50
+      IfCon(len #= 1.R) {
+        c #= 50.R
       }
 
-      IfThen(len #= 2) {
-        c #= 40
+      IfCon(len #= 2.R) {
+        c #= 40.R
       }
 
-      IfThen(len #= 3) {
-        c #= 70
+      IfCon(len #= 3.R) {
+        c #= 70.R
       }
 
     }
@@ -346,8 +347,13 @@ class TestRandJacop extends FlatSpec with VerificationContext {
       currentModel = new Model(5)
       override def toString: String = "Packet1"
       val len:               Rand = new Rand(1, 3)
-      val c:                 Rand = new Rand(1, 100)
-      IfThenElse(len #= 1)(c #= 50)(c #= 100)
+      val c:                 Rand = new Rand(1, 10)
+      // TODO: Fixme
+      val conditional: Constraint = IfCon(len #= 1.R) {
+        c #= 50.R
+      }.ElseC {
+        c #= 10.R
+      }
     }
 
     val myPacket = new Packet(new Model)
@@ -356,7 +362,16 @@ class TestRandJacop extends FlatSpec with VerificationContext {
     if (myPacket.len.value() == 1) {
       assert(myPacket.c.value() == 50)
     } else {
-      assert(myPacket.c.value() == 100)
+      assert(myPacket.c.value() == 10)
+    }
+    myPacket.conditional.disable()
+    assert(myPacket.randomize)
+    if (myPacket.len.value() == 1) {
+      assert(myPacket.c.value() != 50)
+    }
+    assert(myPacket.randomize)
+    if (myPacket.len.value() != 1) {
+      assert(myPacket.c.value() != 100)
     }
   }
 

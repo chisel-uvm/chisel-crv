@@ -1,12 +1,14 @@
 package chisel.bundle.random
 
-import Chisel.{fromIntToWidth, fromtIntToLiteral, Vec}
-import chisel.bundle.random.TestBundles.T
-import chisel3.tester.ChiselScalatestTester
-import chisel3.{Bundle, Input, Module, Output, UInt, Wire}
+import chisel3._
+import chisel3.tester.{testableClock, testableData, ChiselScalatestTester}
+import chisel3.{Bundle, Input, Module, MultiIOModule, Output, UInt, Wire}
 import chisel3.util.{is, switch}
-import crv.backends.jacop.{Constraint, IfThen, Model, Rand, RandBundle, RandObj, VerificationContext}
+import crv.backends.jacop.experimental.RandBundle
+import crv.backends.jacop.{Constraint, IfCon, RandObj}
 import org.scalatest.{FlatSpec, Matchers}
+import chisel3.experimental.BundleLiterals._
+import crv.backends.jacop.backendsjacop._
 
 object TestBundles {
 
@@ -24,34 +26,40 @@ object TestBundles {
     val b = UInt(1.W)
   }
 }
-class Alu(size: Int) extends Module with RandObj {
 
-  val io = IO(new Bundle {
-    val fn:     UInt = Input(UInt(2.W))
-    val a:      UInt = Input(UInt(size.W))
-    val b:      UInt = Input(UInt(size.W))
-    val result: UInt = Output(UInt(size.W))
-  })
+class AluInput(val size: Int) extends Bundle with RandBundle {
+  val a = UInt(size.W)
+  val b = UInt(size.W)
+  val fn = UInt(2.W)
+
+  255.R #> (a #+ b)
+  0.R #< (a #- b)
+
+  fn #< 3.R
+}
+
+class AluOutput(val size: Int) extends Bundle {
+  val result = UInt(size.W)
+}
+
+class Alu(size: Int) extends MultiIOModule {
+  val input = IO(Input(new AluInput(size)))
+  val output = IO(Output(new AluOutput(size)))
 
   val result: UInt = Wire(UInt(size.W))
   result := 0.U
 
-  switch(io.fn) {
-    is(0.U) { result := io.a + io.b }
-    is(1.U) { result := io.a - io.b }
-    is(2.U) { result := io.a | io.b }
-    is(3.U) { result := io.a & io.b }
+  switch(input.fn) {
+    is(0.U) { result := input.a + input.b }
+    is(1.U) { result := input.a - input.b }
+    is(2.U) { result := input.a | input.b }
+    is(3.U) { result := input.a & input.b }
   }
-  io.result := result
+  output.result := result
 }
 
-class AluTest extends FlatSpec with ChiselScalatestTester with VerificationContext with Matchers {
+class RandomBunleTests extends FlatSpec with ChiselScalatestTester with Matchers {
   behavior.of("Random Bundles")
-
-  class JustBundle extends Bundle {
-    val x = UInt(8.W)
-    val y = UInt(8.W)
-  }
 
   class A extends Bundle with RandBundle {
     val x = UInt(8.W)
@@ -64,12 +72,40 @@ class AluTest extends FlatSpec with ChiselScalatestTester with VerificationConte
   class F extends Bundle with RandBundle {
     val x = UInt(8.W)
     val y = UInt(8.W)
-    IfThen(x #= 8) {
-      y #= 9
+    IfCon(x #= 8.R) {
+      y #= 9.R
     }
-    val c = x #= 8
-    val o = y #\= 9
+    val c = x #= 8.R
+    val o = y #\= 9.R
     o.disable()
+  }
+
+  it should "Test the ALU with random Transactions in form of bundle" in {
+    def check(inputT: AluInput): AluOutput = {
+      var result: BigInt = 0
+      if (inputT.fn.litValue() == 0) {
+        result = inputT.a.litValue() + inputT.b.litValue()
+      } else if (inputT.fn.litValue() == 1) {
+        result = inputT.a.litValue() - inputT.b.litValue()
+      } else if (inputT.fn.litValue() == 2) {
+        result = inputT.a.litValue() | inputT.b.litValue()
+      } else {
+        result = inputT.a.litValue() & inputT.b.litValue()
+      }
+      new AluOutput(8).Lit(_.result -> result.U)
+    }
+    test(new Alu(8)) { alu =>
+      val transaction = new AluInput(8)
+      for (i <- Range(0, 10)) {
+        val currentT = transaction.randomBundle()
+        println(currentT.fn)
+        println(currentT.a)
+        println(currentT.b)
+        alu.input.poke(currentT)
+        alu.clock.step()
+        alu.output.expect(check(currentT))
+      }
+    }
   }
 
   it should "Randomize with conditional constraints" in {
@@ -83,20 +119,8 @@ class AluTest extends FlatSpec with ChiselScalatestTester with VerificationConte
     assert(t.y.litValue() != 9)
   }
 
-  it should "Randomize Nested Bundles " in {
-    // This is just a POC is not currently working !!!!!
+  it should "Randomize Bundles and enable disable constraints" in {
     val z = new A()
-    val o = z.randomBundle()
-    assert(o.x.litValue() > o.y.litValue())
-    z.greaterThen.disable()
-    z.lessThen.enable()
-    val t = z.randomBundle()
-    assert(t.x.litValue() < t.y.litValue())
-  }
-
-  ignore should "Randomize Bundles with Vectors " in {
-    // This is just a POC is not currently working !!!!!
-    val z = new T()
     val o = z.randomBundle()
     assert(o.x.litValue() > o.y.litValue())
     z.greaterThen.disable()
