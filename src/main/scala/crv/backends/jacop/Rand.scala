@@ -1,5 +1,6 @@
 package crv.backends.jacop
 
+import chisel3.{Bool, SInt, UInt}
 import org.jacop.constraints._
 import org.jacop.core.IntDomain
 import org.jacop.scala.{IntSet, SetVar}

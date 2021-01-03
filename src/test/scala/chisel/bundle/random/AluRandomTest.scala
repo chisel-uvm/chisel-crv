@@ -6,6 +6,7 @@ import chisel3.tester.{testableClock, testableData, ChiselScalatestTester}
 import chisel3.util._
 import crv.backends.jacop.backendsjacop.RandomBundleWrapper
 import crv.backends.jacop.experimental.RandBundle
+import crv.backends.jacop._
 import org.scalatest.{FlatSpec, Matchers}
 
 class AluInput(val size: Int) extends Bundle {
@@ -18,6 +19,28 @@ class AluInput(val size: Int) extends Bundle {
     data match {
       case _: (AluInput @AluInputConstraint(size)) => true
       case _ => false
+    }
+  }
+}
+
+class AluTransaction(val size: Int) extends RandObj {
+  val a = new Rand(0, math.pow(2, size).toInt)
+  val b = new Rand(0, math.pow(2, size).toInt)
+  val fn = new Rand(0, 4)
+
+  a #+ b #<= 255
+  a #- b #>= 0
+  fn #<= 3
+
+  def expectedResult(): BigInt = {
+    if (fn.value == 0) {
+      a.value + b.value
+    } else if (fn.value == 1) {
+      a.value - b.value
+    } else if (fn.value == 2) {
+      a.value | b.value
+    } else {
+      a.value & b.value
     }
   }
 }
@@ -70,16 +93,32 @@ class Alu(size: Int) extends MultiIOModule {
   }
   output.result := result
 }
+
 class AluRandomTest extends FlatSpec with ChiselScalatestTester with Matchers {
 
   it should "Test the ALU with random Transactions in form of bundle" in {
     test(new Alu(8)) { alu =>
       val transaction = new AluInputConstraint(8)
+      println(transaction.elements)
       for (i <- Range(0, 10)) {
         val currentT = transaction.randomBundle()
         alu.input.poke(currentT)
         alu.clock.step()
         alu.output.expect(currentT.expectedResult())
+      }
+    }
+  }
+
+  it should "Test the ALU with random Transactions" in {
+    test(new Alu(8)) { alu =>
+      val transaction = new AluTransaction(8)
+      for (i <- Range(0, 10)) {
+        transaction.randomize
+        alu.input.a.poke(transaction.a.value.U)
+        alu.input.b.poke(transaction.b.value.U)
+        alu.input.fn.poke(transaction.fn.value.U)
+        alu.clock.step()
+        alu.output.result.expect(transaction.expectedResult().U)
       }
     }
   }
